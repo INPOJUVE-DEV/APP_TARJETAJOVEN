@@ -19,6 +19,23 @@ const identityResponse = {
 };
 
 const submissions = [];
+const mockUser = {
+  id: 'user-001',
+  nombre: 'MARIA GUADALUPE',
+  apellidos: 'SANCHEZ PEREZ',
+  curp: 'SAPM900101MBCNRR06',
+  email: 'pruebas@tarjetajoven.local',
+  municipio: 'Tijuana',
+  telefono: '6640000000',
+};
+const mockCredentials = {
+  username: 'pruebas@tarjetajoven.local',
+  password: 'Prueba123',
+};
+const mockTokens = {
+  accessToken: 'mock-access-token',
+  refreshToken: 'mock-refresh-token',
+};
 
 const setCorsHeaders = (req, baseHeaders = {}) => {
   const origin = req.headers.origin;
@@ -52,7 +69,7 @@ const handleOptions = (req, res) => {
     204,
     setCorsHeaders(req, {
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     }),
   );
   res.end();
@@ -84,6 +101,49 @@ const server = http.createServer(async (req, res) => {
     }
 
     sendJson(req, res, 200, identityResponse);
+    return;
+  }
+
+  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/auth/login') {
+    let parsed = null;
+
+    try {
+      const body = await collectRequestBody(req);
+      const text = body.toString('utf8').trim();
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      sendJson(req, res, 400, { message: 'Payload JSON no valido.' });
+      return;
+    }
+
+    const username = String(parsed.username ?? '').trim().toLowerCase();
+    const password = String(parsed.password ?? '');
+
+    if (username !== mockCredentials.username || password !== mockCredentials.password) {
+      sendJson(req, res, 401, { message: 'Credenciales invalidas.' });
+      return;
+    }
+
+    sendJson(req, res, 200, mockTokens);
+    return;
+  }
+
+  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/auth/logout') {
+    res.writeHead(204, setCorsHeaders(req));
+    res.end();
+    return;
+  }
+
+  if (req.method === 'GET' && requestUrl.pathname === '/api/v1/me') {
+    const authHeader = String(req.headers.authorization ?? '');
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+    if (!token || token !== mockTokens.accessToken) {
+      sendJson(req, res, 401, { message: 'No autorizado.' });
+      return;
+    }
+
+    sendJson(req, res, 200, mockUser);
     return;
   }
 
@@ -128,6 +188,9 @@ server.listen(PORT, () => {
   console.log(`Mock de nuevo registro escuchando en http://localhost:${PORT}`);
   console.log('Endpoints disponibles:');
   console.log(`  POST http://localhost:${PORT}/mock-ine`);
+  console.log(`  POST http://localhost:${PORT}/api/v1/auth/login`);
+  console.log(`  POST http://localhost:${PORT}/api/v1/auth/logout`);
+  console.log(`  GET  http://localhost:${PORT}/api/v1/me`);
   console.log(`  POST http://localhost:${PORT}/api/v1/cardholders`);
   console.log(`  GET  http://localhost:${PORT}/api/v1/cardholders`);
 });
