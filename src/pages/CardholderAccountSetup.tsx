@@ -8,6 +8,8 @@ import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './CardholderAccountSetup.css';
 
 const PASSWORD_MIN_LENGTH = 8;
+const EMAIL_MAX_LENGTH = 254;
+const PASSWORD_MAX_LENGTH = 128;
 
 type LocationState = {
   lookup?: CardholderLookupResponse;
@@ -110,6 +112,7 @@ const CardholderAccountSetup = () => {
               placeholder="correo@dominio.com"
               inputMode="email"
               autoComplete="username"
+              maxLength={EMAIL_MAX_LENGTH}
               disabled={isCompleted}
               required
             />
@@ -124,6 +127,7 @@ const CardholderAccountSetup = () => {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               placeholder="********"
               autoComplete="new-password"
               disabled={isCompleted}
@@ -143,6 +147,7 @@ const CardholderAccountSetup = () => {
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="********"
               autoComplete="new-password"
+              maxLength={PASSWORD_MAX_LENGTH}
               disabled={isCompleted}
               required
             />

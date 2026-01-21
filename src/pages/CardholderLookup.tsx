@@ -81,7 +81,10 @@ const CardholderLookup = () => {
             placeholder="INGR000000HDFXXX00"
             onChange={(event) => setCurp(event.target.value.toUpperCase())}
             maxLength={18}
+            pattern="[A-Z0-9]{18}"
             autoComplete="off"
+            autoCapitalize="characters"
+            autoCorrect="off"
             required
           />
           <p className="cardholder-lookup__hint">Escribe los 18 caracteres tal como aparecen en tu credencial.</p>

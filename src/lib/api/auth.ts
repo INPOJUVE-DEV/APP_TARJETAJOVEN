@@ -10,11 +10,11 @@ export interface UserProfile {
   id: string;
   nombre: string;
   apellidos: string;
-  curp: string;
   email?: string | null;
   municipio?: string | null;
   telefono?: string | null;
   edad?: number | null;
+  creditos?: number | null;
   fotoUrl?: string | null;
   portadaUrl?: string | null;
   barcodeValue?: string | null;
@@ -25,7 +25,7 @@ export const authApi = {
     apiFetch<AuthTokens>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(payload),
-    }),
+    }, { skipAuth: true }),
   logout: () =>
     apiFetch<void>('/auth/logout', {
       method: 'POST',

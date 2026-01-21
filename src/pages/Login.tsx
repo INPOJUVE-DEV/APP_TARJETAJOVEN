@@ -5,6 +5,8 @@ import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Login.css';
 
 const PASSWORD_MIN_LENGTH = 8;
+const EMAIL_MAX_LENGTH = 254;
+const PASSWORD_MAX_LENGTH = 128;
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -87,6 +89,7 @@ const Login = () => {
               inputMode="email"
               placeholder="correo@dominio.com"
               autoComplete="username"
+              maxLength={EMAIL_MAX_LENGTH}
               required
             />
             {!isUsernameValid && username && (
@@ -105,6 +108,7 @@ const Login = () => {
                 setStatusMessage('');
               }}
               minLength={PASSWORD_MIN_LENGTH}
+              maxLength={PASSWORD_MAX_LENGTH}
               placeholder="Escribe tu contraseña"
               autoComplete="current-password"
               required

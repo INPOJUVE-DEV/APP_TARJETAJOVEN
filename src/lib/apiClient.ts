@@ -65,9 +65,14 @@ const parsePayload = async (response: Response) => {
   }
 };
 
+export interface ApiFetchOptions {
+  skipAuth?: boolean;
+}
+
 export const apiFetch = async <TResponse = unknown>(
   path: string,
   init: RequestInit = {},
+  options: ApiFetchOptions = {},
 ): Promise<TResponse> => {
   const headers = new Headers(init.headers ?? {});
 
@@ -80,7 +85,7 @@ export const apiFetch = async <TResponse = unknown>(
   }
 
   const tokens = getStoredTokens();
-  if (tokens?.accessToken && !headers.has('Authorization')) {
+  if (!options.skipAuth && tokens?.accessToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${tokens.accessToken}`);
   }
 

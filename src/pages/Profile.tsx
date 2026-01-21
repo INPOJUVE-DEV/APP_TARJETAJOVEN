@@ -7,45 +7,8 @@ import './Profile.css';
 const DEFAULT_PROFILE = {
   name: 'Itzel Martinez',
   age: 22,
+  credits: 0,
   barcode: 'TJ-894512-2025',
-};
-
-const getBirthDateFromCurp = (curp: string): Date | null => {
-  const match = curp?.toUpperCase().match(/^[A-Z]{4}(\d{2})(\d{2})(\d{2})/);
-  if (!match) {
-    return null;
-  }
-
-  const [, yy, mm, dd] = match;
-  const year = Number(yy);
-  const month = Number(mm);
-  const day = Number(dd);
-  if (!year && !month && !day) {
-    return null;
-  }
-
-  const currentYearShort = new Date().getFullYear() % 100;
-  const century = year <= currentYearShort ? 2000 : 1900;
-  const fullYear = century + year;
-  const birthDate = new Date(fullYear, month - 1, day);
-
-  return Number.isNaN(birthDate.getTime()) ? null : birthDate;
-};
-
-const getAgeFromCurp = (curp: string): number | null => {
-  const birthDate = getBirthDateFromCurp(curp);
-  if (!birthDate) {
-    return null;
-  }
-
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age -= 1;
-  }
-
-  return age;
 };
 
 const Profile = () => {
@@ -62,12 +25,12 @@ const Profile = () => {
     if (typeof user?.edad === 'number' && !Number.isNaN(user.edad)) {
       return user.edad;
     }
-    return user?.curp ? getAgeFromCurp(user.curp) ?? DEFAULT_PROFILE.age : DEFAULT_PROFILE.age;
-  }, [user?.edad, user?.curp]);
+    return DEFAULT_PROFILE.age;
+  }, [user?.edad]);
 
   const qrValue = useMemo(
-    () => user?.barcodeValue ?? user?.curp ?? DEFAULT_PROFILE.barcode,
-    [user?.barcodeValue, user?.curp],
+    () => user?.barcodeValue ?? DEFAULT_PROFILE.barcode,
+    [user?.barcodeValue],
   );
 
   const handleLogout = async () => {

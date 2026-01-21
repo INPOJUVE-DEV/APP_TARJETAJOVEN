@@ -6,6 +6,10 @@ const apiBaseUrl =
     ? rawApiBaseUrl.trim()
     : DEFAULT_API_BASE_URL;
 
+if (import.meta.env.PROD && /^https?:\/\//i.test(apiBaseUrl) && apiBaseUrl.startsWith('http://')) {
+  throw new Error('VITE_API_URL debe usar https en produccion.');
+}
+
 const rawIdentityValidationUrl = import.meta.env.VITE_ID_VALIDATION_URL;
 const identityValidationUrl =
   typeof rawIdentityValidationUrl === 'string' && rawIdentityValidationUrl.trim().length > 0

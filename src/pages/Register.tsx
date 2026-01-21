@@ -10,6 +10,11 @@ import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Register.css';
 
 const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 128;
+const EMAIL_MAX_LENGTH = 254;
+const STREET_MAX_LENGTH = 80;
+const COLONY_MAX_LENGTH = 80;
+const HOUSE_NUMBER_MAX_LENGTH = 10;
 const POSTAL_CODE_REGEX = /^\d{5}$/;
 const HOUSE_NUMBER_REGEX = /^[0-9]{1,5}[A-Z0-9\-]{0,4}$/;
 const fileAccept = '.jpg,.jpeg,.png,.pdf';
@@ -460,6 +465,7 @@ const Register = () => {
                 type="text"
                 value={identityData.calle}
                 onChange={(event) => handleAddressChange('calle', event.target.value)}
+                maxLength={STREET_MAX_LENGTH}
                 disabled={!allowAddressEdit}
               />
               {allowAddressEdit && addressErrors.calle && <p className="register__error">{addressErrors.calle}</p>}
@@ -472,6 +478,7 @@ const Register = () => {
                 type="text"
                 value={identityData.numero}
                 onChange={(event) => handleAddressChange('numero', event.target.value)}
+                maxLength={HOUSE_NUMBER_MAX_LENGTH}
                 disabled={!allowAddressEdit}
               />
               {allowAddressEdit && addressErrors.numero && <p className="register__error">{addressErrors.numero}</p>}
@@ -484,6 +491,7 @@ const Register = () => {
                 type="text"
                 inputMode="numeric"
                 maxLength={5}
+                pattern="[0-9]{5}"
                 value={identityData.cp}
                 onChange={(event) => handleAddressChange('cp', event.target.value)}
                 disabled={!allowAddressEdit}
@@ -498,6 +506,7 @@ const Register = () => {
                 type="text"
                 value={identityData.colonia}
                 onChange={(event) => handleAddressChange('colonia', event.target.value)}
+                maxLength={COLONY_MAX_LENGTH}
                 disabled={!allowAddressEdit}
               />
               {allowAddressEdit && addressErrors.colonia && <p className="register__error">{addressErrors.colonia}</p>}
@@ -524,6 +533,7 @@ const Register = () => {
           placeholder="correo@dominio.com"
           inputMode="email"
           autoComplete="username"
+          maxLength={EMAIL_MAX_LENGTH}
           required
         />
         {accountErrors.username && <p className="register__error">{accountErrors.username}</p>}
@@ -537,6 +547,7 @@ const Register = () => {
           value={accountData.password}
           onChange={(event) => handleAccountChange('password', event.target.value)}
           minLength={PASSWORD_MIN_LENGTH}
+          maxLength={PASSWORD_MAX_LENGTH}
           placeholder="********"
           autoComplete="new-password"
           required

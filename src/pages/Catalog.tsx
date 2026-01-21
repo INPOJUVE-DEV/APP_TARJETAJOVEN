@@ -10,6 +10,7 @@ import {
 import { track } from '../lib/analytics';
 
 const skeletonArray = Array.from({ length: 6 }, (_, index) => index);
+const MAX_SEARCH_LENGTH = 120;
 
 const Catalog = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -114,7 +115,7 @@ const Catalog = () => {
   };
 
   const handleSearch = () => {
-    const trimmed = query.trim();
+    const trimmed = query.trim().slice(0, MAX_SEARCH_LENGTH);
     setAppliedQuery(trimmed);
     setPage(1);
     setBenefits([]);

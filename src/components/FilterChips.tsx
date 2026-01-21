@@ -13,6 +13,8 @@ interface FilterChipsProps {
   onReset: () => void;
 }
 
+const MAX_SEARCH_LENGTH = 120;
+
 const toggleValue = (value: string, list: string[], onChange: (values: string[]) => void) => {
   if (list.includes(value)) {
     onChange(list.filter((item) => item !== value));
@@ -39,7 +41,7 @@ const FilterChips = ({
   };
 
   const handleQueryInput = (event: ChangeEvent<HTMLInputElement>) => {
-    onQueryChange(event.target.value);
+    onQueryChange(event.target.value.slice(0, MAX_SEARCH_LENGTH));
   };
 
   const handleMultiSelectChange = (
@@ -113,6 +115,7 @@ const FilterChips = ({
           value={query}
           onChange={handleQueryInput}
           className="catalog-filters__input"
+          maxLength={MAX_SEARCH_LENGTH}
         />
         <button type="submit" className="catalog-filters__submit">
           Buscar

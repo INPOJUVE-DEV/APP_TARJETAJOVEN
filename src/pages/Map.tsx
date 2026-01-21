@@ -10,6 +10,7 @@ import { track } from '../lib/analytics';
 import './Map.css';
 
 const MAPS_URL = env.mapsUrl;
+const MAX_SEARCH_LENGTH = 120;
 
 const MapPage = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -119,7 +120,7 @@ const MapPage = () => {
   };
 
   const handleSearch = () => {
-    const trimmed = query.trim();
+    const trimmed = query.trim().slice(0, MAX_SEARCH_LENGTH);
     setAppliedQuery(trimmed);
     if (trimmed) {
       track('search', {
