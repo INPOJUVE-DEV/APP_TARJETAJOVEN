@@ -1,6 +1,6 @@
-# API - Vinculacion de tarjeta fisica
+﻿# API - Vinculacion de tarjeta fisica
 
-Este documento describe los endpoints necesarios para habilitar el flujo **"Ya tengo tarjeta fisica"** en el frontend. La funcionalidad permite que una persona con tarjeta emitida, pero sin credenciales digitales, valide su CURP y cree un usuario/contraseña para ingresar a la plataforma.
+Este documento describe los endpoints necesarios para habilitar el flujo **"Ya tengo tarjeta fisica"** en el frontend. La funcionalidad permite que una persona con tarjeta emitida, pero sin credenciales digitales, valide su CURP y cree un usuario/contrasena para ingresar a la plataforma.
 
 ## 1. `POST /api/v1/cardholders/lookup`
 
@@ -35,7 +35,7 @@ Valida que la CURP pertenezca a una tarjeta activa y devuelve los datos minimos 
 
 ## 2. `POST /api/v1/cardholders/{curp}/account`
 
-Crea el usuario y la contraseña asociados a la tarjeta previamente verificada.
+Crea el usuario y la contrasena asociados a la tarjeta previamente verificada.
 
 - **Auth**: No requiere token (flujo previo al login).
 - **Body**:
@@ -58,7 +58,7 @@ Crea el usuario y la contraseña asociados a la tarjeta previamente verificada.
 ```
 
 - **Errores esperados**:
-  - `400/422` si la contraseña no cumple las reglas (min. 8 caracteres, coincidencia con confirmación).
+  - `400/422` si la contrasena no cumple las reglas (min. 8 caracteres, coincidencia con confirmacion).
   - `404` si el CURP no pasa la validacion previa (ej. se intento saltar el flujo).
   - `409` si ya existe un usuario asociado a esa CURP.
 

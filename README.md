@@ -71,28 +71,28 @@ Antes de abrir un Pull Request asegurate de:
 - Documentar cualquier nueva variable de entorno requerida.
 - Anadir pruebas o pasos de verificacion manual cuando apliquen.
 
-## Análisis de Endpoints para Backend
+## Analisis de Endpoints para Backend
 
-Esta sección documenta los endpoints que el frontend consume, con el objetivo de guiar el desarrollo del backend.
+Esta seccion documenta los endpoints que el frontend consume, con el objetivo de guiar el desarrollo del backend.
 
 ### Consideraciones Generales
 
-*   **CORS (Cross-Origin Resource Sharing)**: El cliente está configurado para ejecutarse en un dominio diferente al del backend (`http://localhost:3000` vs. `http://localhost:8080` en desarrollo). El backend **debe** habilitar CORS para el dominio del frontend. Específicamente, necesita:
-    *   Permitir los métodos `GET`, `POST`.
-    *   Permitir las cabeceras `Authorization` y `Content-Type`.
-    *   Habilitar el envío de credenciales (`credentials: true`), ya que el frontend envía las cookies de sesión.
-*   **Formato de Datos**: La comunicación se realiza principalmente con formato **JSON**. El cliente envía `Content-Type: application/json` y espera recibir `Content-Type: application/json`. La única excepción es el endpoint de registro, que debería aceptar `multipart/form-data`.
-*   **Autenticación**: Las rutas protegidas deben esperar un token JWT en la cabecera `Authorization` con el formato `Bearer {token}`.
-*   **Respuestas de Error**: El frontend espera códigos de estado HTTP estándar. Una respuesta `401 Unauthorized` en cualquier endpoint protegido provocará que la sesión del usuario se limpie localmente. Los errores de validación (`400 Bad Request`) deberían devolver un cuerpo JSON con una propiedad `message` que describa el error.
+- **CORS (Cross-Origin Resource Sharing)**: El cliente esta configurado para ejecutarse en un dominio diferente al del backend (`http://localhost:3000` vs. `http://localhost:8080` en desarrollo). El backend **debe** habilitar CORS para el dominio del frontend. Especificamente, necesita:
+  - Permitir los metodos `GET`, `POST`.
+  - Permitir las cabeceras `Authorization` y `Content-Type`.
+  - Habilitar el envio de credenciales (`credentials: true`), ya que el frontend envia las cookies de sesion.
+- **Formato de Datos**: La comunicacion se realiza principalmente con formato **JSON**. El cliente envia `Content-Type: application/json` y espera recibir `Content-Type: application/json`. La unica excepcion es el endpoint de registro, que deberia aceptar `multipart/form-data`.
+- **Autenticacion**: Las rutas protegidas deben esperar un token JWT en la cabecera `Authorization` con el formato `Bearer {token}`.
+- **Respuestas de Error**: El frontend espera codigos de estado HTTP estandar. Una respuesta `401 Unauthorized` en cualquier endpoint protegido provocara que la sesion del usuario se limpie localmente. Los errores de validacion (`400 Bad Request`) deberian devolver un cuerpo JSON con una propiedad `message` que describa el error.
 
 ### Endpoints Identificados
 
-A continuación se detallan los endpoints extraídos del código fuente:
+A continuacion se detallan los endpoints extraidos del codigo fuente:
 
-#### Módulo de Autenticación (`/auth`)
+#### Modulo de Autenticacion (`/auth`)
 
 1.  **`POST /auth/login`**
-    *   **Descripción**: Autentica a un usuario y devuelve tokens de acceso.
+    *   **Descripcion**: Autentica a un usuario y devuelve tokens de acceso.
     *   **Request Body** (`application/json`):
         ```json
         {
@@ -109,23 +109,23 @@ A continuación se detallan los endpoints extraídos del código fuente:
         ```
 
 2.  **`POST /auth/logout`**
-    *   **Descripción**: Invalida la sesión del usuario en el backend.
-    *   **Autenticación**: Requiere cabecera `Authorization: Bearer {token}`.
-    *   **Request Body**: Vacío.
-    *   **Response Body**: Vacío, con estado `200` o `204`.
+    *   **Descripcion**: Invalida la sesion del usuario en el backend.
+    *   **Autenticacion**: Requiere cabecera `Authorization: Bearer {token}`.
+    *   **Request Body**: Vacio.
+    *   **Response Body**: Vacio, con estado `200` o `204`.
 
 3.  **`POST /auth/otp/send`**
-    *   **Descripción**: Envía un código de un solo uso (OTP) al usuario para recuperación de cuenta o verificación.
+    *   **Descripcion**: Envia un codigo de un solo uso (OTP) al usuario para recuperacion de cuenta o verificacion.
     *   **Request Body** (`application/json`):
         ```json
         {
           "curp": "string"
         }
         ```
-    *   **Response Body**: Vacío, con estado `200`.
+    *   **Response Body**: Vacio, con estado `200`.
 
 4.  **`POST /auth/otp/verify`**
-    *   **Descripción**: Verifica un código OTP y, si es válido, devuelve tokens de autenticación.
+    *   **Descripcion**: Verifica un codigo OTP y, si es valido, devuelve tokens de autenticacion.
     *   **Request Body** (`application/json`):
         ```json
         {
@@ -141,11 +141,11 @@ A continuación se detallan los endpoints extraídos del código fuente:
         }
         ```
 
-#### Módulo de Usuario (`/me`)
+#### Modulo de Usuario (`/me`)
 
 1.  **`GET /me`**
-    *   **Descripción**: Obtiene la información del perfil del usuario autenticado.
-    *   **Autenticación**: Requiere cabecera `Authorization: Bearer {token}`.
+    *   **Descripcion**: Obtiene la informacion del perfil del usuario autenticado.
+    *   **Autenticacion**: Requiere cabecera `Authorization: Bearer {token}`.
     *   **Response Body** (`application/json`):
         ```json
         {
@@ -159,17 +159,17 @@ A continuación se detallan los endpoints extraídos del código fuente:
         }
         ```
 
-#### Módulo de Catálogo (`/catalog`)
+#### Modulo de Catalogo (`/catalog`)
 
 1.  **`GET /catalog`**
-    *   **Descripción**: Obtiene la lista de beneficios o comercios.
-    *   **Autenticación**: Opcional. Puede ser pública.
+    *   **Descripcion**: Obtiene la lista de beneficios o comercios.
+    *   **Autenticacion**: Opcional. Puede ser publica.
     *   **Query Parameters**:
-        *   `q` (string, opcional): Término de búsqueda.
-        *   `categoria` (string, opcional): Filtrar por categoría.
+        *   `q` (string, opcional): Termino de busqueda.
+        *   `categoria` (string, opcional): Filtrar por categoria.
         *   `municipio` (string, opcional): Filtrar por municipio.
-        *   `page` (number, opcional): Número de página para paginación.
-        *   `pageSize` (number, opcional): Tamaño de la página.
+        *   `page` (number, opcional): Numero de pagina para paginacion.
+        *   `pageSize` (number, opcional): Tamano de la pagina.
     *   **Response Body** (`application/json`):
         ```json
         {
@@ -194,10 +194,10 @@ A continuación se detallan los endpoints extraídos del código fuente:
         }
         ```
 
-#### Módulo de Registro (`/register`)
+#### Modulo de Registro (`/register`)
 
-1.  **`POST /register`** (Endpoint Asumido)
-    *   **Descripción**: Procesa una nueva solicitud de registro de usuario. El frontend no implementa la llamada, pero prepara los datos.
+1.  **`POST /register`** (Endpoint asumido)
+    *   **Descripcion**: Procesa una nueva solicitud de registro de usuario. El frontend no implementa la llamada, pero prepara los datos.
     *   **Request Body** (`multipart/form-data`):
         *   `nombres`: "string"
         *   `apellidos`: "string"
