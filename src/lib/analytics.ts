@@ -8,6 +8,7 @@ export type AnalyticsEventName =
   | 'open_map'
   | 'search'
   | 'filter'
+  | 'pagination'
   | 'open_merchant'
   | 'install_click'
   | 'installed';

@@ -52,16 +52,12 @@
 
 .map-page__viewer {
   position: relative;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--color-secondary-bright-rgb), 0.18),
-    rgba(var(--color-accent-500-rgb), 0.15)
-  );
-  border: 1px solid rgba(var(--color-secondary-bright-rgb), 0.35);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-md);
   overflow: hidden;
   min-height: 320px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none;
   display: flex;
 }
 
@@ -80,7 +76,8 @@
   border-radius: var(--radius-md);
   padding: 32px 24px;
   text-align: center;
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-divider);
+  box-shadow: none;
   color: var(--color-neutral-700);
   display: grid;
   gap: 8px;
@@ -99,7 +96,8 @@
 .map-card {
   background-color: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-divider);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -107,8 +105,9 @@
 }
 
 .map-card--selected {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: rgba(var(--color-primary-500-rgb), 0.55);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
 }
 
 .map-card__select {
@@ -145,7 +144,8 @@
 
 .map-card__chip {
   background-color: var(--color-neutral-100);
-  border-radius: 999px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
   padding: 6px 12px;
   font-size: 1rem;
   font-weight: 600;
@@ -175,17 +175,17 @@
   gap: 8px;
   padding: 10px 16px;
   border-radius: var(--radius-sm);
-  background: var(--gradient-accent);
-  color: #fff;
+  background: var(--color-primary-500);
+  color: var(--color-button-on-primary);
   font-weight: 600;
-  box-shadow: 0 12px 22px rgba(230, 0, 100, 0.22);
+  box-shadow: none;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .map-card__link:hover,
 .map-card__link:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 14px 26px rgba(230, 0, 100, 0.28);
+  box-shadow: var(--shadow-sm);
 }
 
 @media (min-width: 768px) {

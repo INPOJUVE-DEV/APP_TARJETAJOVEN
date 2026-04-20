@@ -64,8 +64,13 @@ const FilterChips = ({
     onChange: (values: string[]) => void,
     dropdownId: string,
   ) => (
-    <div className="catalog-filters__group">
-      <p className="catalog-filters__group-label">{label}</p>
+    <fieldset className="catalog-filters__group">
+      <legend className="catalog-filters__group-label">
+        <span>{label}</span>
+        <small>
+          {selected.length > 0 ? `${selected.length} activos` : `${options.length} opciones`}
+        </small>
+      </legend>
       <div className="catalog-filters__chips" role="group" aria-label={label}>
         {options.map((option) => {
           const isActive = selected.includes(option);
@@ -77,6 +82,11 @@ const FilterChips = ({
               onClick={() => toggleValue(option, selected, onChange)}
               aria-pressed={isActive}
             >
+              {isActive && (
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                  <path d="M6.2 11.4 2.8 8l1.1-1.1 2.3 2.3 5.9-5.9L13.2 4Z" />
+                </svg>
+              )}
               {option}
             </button>
           );
@@ -99,7 +109,7 @@ const FilterChips = ({
           </option>
         ))}
       </select>
-    </div>
+    </fieldset>
   );
 
   return (
@@ -118,13 +128,16 @@ const FilterChips = ({
           maxLength={MAX_SEARCH_LENGTH}
         />
         <button type="submit" className="catalog-filters__submit">
-          Buscar
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M10.5 3a7.5 7.5 0 0 1 5.92 12.1l3.24 3.24a1 1 0 0 1-1.42 1.42L15 16.52A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" />
+          </svg>
+          <span>Buscar</span>
         </button>
       </div>
 
       <div className="catalog-filters__panels">
         {categories.length > 0 &&
-          renderChipList('Categorías', categories, selectedCategories, onCategoriesChange, 'category-filter')}
+          renderChipList('Categor\u00edas', categories, selectedCategories, onCategoriesChange, 'category-filter')}
 
         {municipalities.length > 0 &&
           renderChipList(
@@ -153,14 +166,17 @@ const FilterChips = ({
               aria-label={`Quitar ${tag.value}`}
             >
               {tag.value}
-              <span aria-hidden="true">×</span>
+              <span aria-hidden="true">&times;</span>
             </button>
           ))}
         </div>
       )}
 
       <button type="button" className="catalog-filters__reset" onClick={onReset}>
-        Limpiar filtros
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6.7 5.3a1 1 0 0 1 1.4 0L12 9.17l3.9-3.88a1 1 0 1 1 1.4 1.42L13.42 10.6l3.88 3.9a1 1 0 0 1-1.42 1.4L12 12.03 8.1 15.9a1 1 0 1 1-1.4-1.42l3.88-3.88L6.7 6.7a1 1 0 0 1 0-1.4Z" />
+        </svg>
+        <span>Limpiar filtros</span>
       </button>
     </form>
   );

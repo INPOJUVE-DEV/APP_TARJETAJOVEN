@@ -8,8 +8,8 @@
   gap: 12px;
   padding: 12px 20px;
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  color: #fff;
+  box-shadow: var(--shadow-sm);
+  color: var(--color-surface);
   font-weight: 600;
   z-index: 2000;
   min-width: 280px;
@@ -28,6 +28,7 @@
 
 .snackbar--error {
   background: var(--color-error);
+  color: var(--color-button-on-primary);
 }
 
 .snackbar__message {

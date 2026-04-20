@@ -6,7 +6,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(24px, 4vw, 48px);
+  gap: clamp(20px, 4vw, 40px);
 }
 
 .visually-hidden {
@@ -23,25 +23,20 @@
 .login__card {
   width: min(520px, 100%);
   position: relative;
-  border-radius: 1.25rem;
+  border-radius: var(--radius-lg);
   padding: clamp(28px, 5vw, 48px);
   overflow: hidden;
-  background: linear-gradient(140deg, rgba(5, 90, 28, 0.95), rgba(118, 184, 42, 0.9));
-  box-shadow: 0 22px 34px rgba(5, 90, 28, 0.32);
-  color: #ffffff;
-  --heading-color: #fff;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-neutral-900);
+  --heading-color: var(--color-heading);
   display: grid;
   gap: 24px;
 }
 
 .login__card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0.15;
-  background-image: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.9) 0, transparent 55%),
-    radial-gradient(circle at 80% 30%, rgba(255, 255, 255, 0.8) 0, transparent 60%),
-    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.6) 0, transparent 55%);
+  display: none;
 }
 
 .login__card > * {
@@ -66,22 +61,22 @@
 
 .login__field label {
   font-weight: 600;
-  color: #f7f7f7;
+  color: var(--color-neutral-700);
 }
 
 .login__field input {
   padding: 14px 16px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--color-divider);
   font-size: 1rem;
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--color-surface-muted);
+  color: var(--color-neutral-900);
 }
 
 .login__field input:focus {
-  border-color: rgba(255, 255, 255, 0.6);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+  border-color: rgba(var(--color-primary-500-rgb), 0.55);
+  box-shadow: var(--shadow-focus);
 }
 
 .login__field.is-invalid input {
@@ -89,7 +84,7 @@
 }
 
 .login__field input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-neutral-500);
 }
 
 .login__error {
@@ -106,7 +101,7 @@
 
 .login__submit {
   padding: 14px 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: none;
   font-weight: 700;
   cursor: pointer;
@@ -115,15 +110,15 @@
 
 .login__submit {
   background: var(--color-primary-500);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 10px 22px rgba(5, 90, 28, 0.3);
+  color: var(--color-button-on-primary);
+  border: 1px solid transparent;
+  box-shadow: none;
 }
 
 .login__submit:hover:enabled {
   background: var(--color-primary-600);
-  transform: translateY(-2px);
-  box-shadow: 0 14px 30px rgba(5, 90, 28, 0.28);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .login__submit:disabled {
@@ -133,10 +128,10 @@
 
 .login__secondary {
   padding: 12px 20px;
-  border-radius: 999px;
-  border: 1px solid var(--color-accent-500);
-  background: rgba(var(--color-accent-500-rgb), 0.12);
-  color: var(--color-accent-500);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  color: var(--color-primary-600);
   font-weight: 600;
   cursor: pointer;
   transition: border-color var(--transition-base), color var(--transition-base), transform var(--transition-base);
@@ -144,16 +139,16 @@
 
 .login__secondary:hover,
 .login__secondary:focus-visible {
-  border-color: var(--color-accent-500);
-  color: #fff;
-  background: rgba(var(--color-accent-500-rgb), 0.25);
+  border-color: rgba(var(--color-primary-500-rgb), 0.45);
+  color: var(--color-neutral-900);
+  background: var(--color-surface-muted);
   transform: translateY(-1px);
 }
 
 .login__status {
   min-height: 20px;
   font-size: 1rem;
-  color: #f7f7f7;
+  color: var(--color-neutral-700);
 }
 
 .login__footer {
@@ -162,11 +157,11 @@
   gap: 8px;
   justify-content: center;
   align-items: center;
-  color: var(--color-neutral-100);
+  color: var(--color-neutral-600);
 }
 
 .login__footer a {
-  color: var(--color-accent-500);
+  color: var(--color-primary-600);
   font-weight: 600;
   text-decoration: underline;
 }
@@ -175,7 +170,7 @@
   width: min(75%, 390px);
   display: flex;
   justify-content: center;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.35));
+  filter: none;
 }
 
 .login__brand img {

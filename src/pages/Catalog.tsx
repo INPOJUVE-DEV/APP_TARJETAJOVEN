@@ -11,6 +11,19 @@ import { track } from '../lib/analytics';
 
 const skeletonArray = Array.from({ length: 6 }, (_, index) => index);
 const MAX_SEARCH_LENGTH = 120;
+const PAGE_SIZE = 25;
+const MAX_VISIBLE_PAGES = 5;
+
+const getVisiblePages = (currentPage: number, totalPages: number) => {
+  if (totalPages <= MAX_VISIBLE_PAGES) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const halfWindow = Math.floor(MAX_VISIBLE_PAGES / 2);
+  const start = Math.max(Math.min(currentPage - halfWindow, totalPages - MAX_VISIBLE_PAGES + 1), 1);
+
+  return Array.from({ length: MAX_VISIBLE_PAGES }, (_, index) => start + index);
+};
 
 const Catalog = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -28,15 +41,14 @@ const Catalog = () => {
   const [fetchCatalog, { data, isLoading, isFetching, isError }] = useLazyGetCatalogQuery();
 
   useEffect(() => {
-    if (page === 1) {
-      setIsAwaiting(true);
-    }
+    setIsAwaiting(true);
 
     fetchCatalog({
       categoria: selectedCategories.length ? selectedCategories.join(',') : undefined,
       municipio: selectedMunicipalities.length ? selectedMunicipalities.join(',') : undefined,
       q: appliedQuery || undefined,
       page,
+      pageSize: PAGE_SIZE,
     });
   }, [selectedCategories, selectedMunicipalities, appliedQuery, page, fetchCatalog]);
 
@@ -49,11 +61,7 @@ const Catalog = () => {
       return;
     }
 
-    if (page === 1) {
-      setBenefits(data.data);
-    } else {
-      setBenefits((previous) => [...previous, ...data.data]);
-    }
+    setBenefits(data.data);
 
     if (data.meta?.filters?.categories) {
       setCategories(data.meta.filters.categories);
@@ -74,21 +82,33 @@ const Catalog = () => {
     }
   }, [isError, isFetching]);
 
-  const hasMore = useMemo(() => {
-    if (!data?.meta) {
-      return false;
+  const activeFilterCount = selectedCategories.length + selectedMunicipalities.length;
+  const totalBenefits = data?.meta?.total ?? benefits.length;
+  const currentPage = data?.meta?.page ?? page;
+  const totalPages = data?.meta?.totalPages ?? 1;
+  const visiblePages = useMemo(
+    () => getVisiblePages(currentPage, totalPages),
+    [currentPage, totalPages],
+  );
+  const firstVisibleItem = totalBenefits === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const lastVisibleItem = Math.min(currentPage * PAGE_SIZE, totalBenefits);
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage === page || nextPage < 1 || nextPage > totalPages || isFetching) {
+      return;
     }
 
-    if (typeof data.meta.nextPage === 'number') {
-      return data.meta.nextPage > data.meta.page;
-    }
-
-    if (typeof data.meta.totalPages === 'number') {
-      return data.meta.page < data.meta.totalPages;
-    }
-
-    return false;
-  }, [data]);
+    setSelectedBenefit(undefined);
+    setIsModalOpen(false);
+    setBenefits([]);
+    setPage(nextPage);
+    setIsAwaiting(true);
+    track('pagination', {
+      origin: 'catalog',
+      page: nextPage,
+      pageSize: PAGE_SIZE,
+    });
+  };
 
   const handleCategoryChange = (categoriesValue: string[]) => {
     setSelectedCategories(categoriesValue);
@@ -161,7 +181,26 @@ const Catalog = () => {
 
   return (
     <main className="catalog-page">
-      <h1 className="catalog-page__title">Catálogo de beneficios</h1>
+      <section className="catalog-hero" aria-labelledby="catalog-title">
+        <div className="catalog-hero__copy">
+          <p className="catalog-hero__eyebrow">Convenios activos</p>
+          <h1 id="catalog-title" className="catalog-page__title">
+            Cat&aacute;logo de beneficios
+          </h1>
+          <p className="catalog-hero__summary">
+            Encuentra comercios aliados, revisa las condiciones y ubica el beneficio que
+            puedes usar desde tu tarjeta digital.
+          </p>
+        </div>
+        <div className="catalog-hero__meta" aria-live="polite">
+          <span>
+            {totalBenefits} {totalBenefits === 1 ? 'beneficio' : 'beneficios'}
+          </span>
+          <span>
+            {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+          </span>
+        </div>
+      </section>
 
       <FilterChips
         categories={categories}
@@ -177,7 +216,7 @@ const Catalog = () => {
       />
 
       <section className="catalog-page__list" aria-live="polite" role="list">
-        {(isLoading || (isFetching && page === 1) || (isAwaiting && page === 1)) && (
+        {(isLoading || isFetching || isAwaiting) && (
           <div className="catalog-page__skeletons" aria-hidden="true">
             {skeletonArray.map((item) => (
               <div key={item} className="benefit-card benefit-card--skeleton" />
@@ -188,9 +227,9 @@ const Catalog = () => {
         {!isAwaiting && !isLoading && !isFetching && benefits.length === 0 && data && !isError && (
           <div className="catalog-page__empty">
             <div className="catalog-page__empty-illustration" aria-hidden="true">
-              <span role="img" aria-label="Sin resultados">
-                🔍
-              </span>
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M10.5 3a7.5 7.5 0 0 1 5.92 12.1l3.24 3.24a1 1 0 0 1-1.42 1.42L15 16.52A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" />
+              </svg>
             </div>
             <p>No se encontraron resultados</p>
           </div>
@@ -210,19 +249,52 @@ const Catalog = () => {
         </LayoutGroup>
 
         {isError && (
-          <p className="catalog-page__error">Ocurrió un error al cargar el catálogo.</p>
+          <p className="catalog-page__error">Ocurri&oacute; un error al cargar el cat&aacute;logo.</p>
         )}
       </section>
 
-      {hasMore && (
-        <button
-          type="button"
-          className="catalog-page__load-more"
-          onClick={() => setPage((current) => current + 1)}
-          disabled={isFetching}
-        >
-          {isFetching ? 'Cargando…' : 'Cargar más'}
-        </button>
+      {totalPages > 1 && (
+        <nav className="catalog-pagination" aria-label="Paginaci&oacute;n del cat&aacute;logo">
+          <p className="catalog-pagination__summary" aria-live="polite">
+            Mostrando {firstVisibleItem}-{lastVisibleItem} de {totalBenefits}
+          </p>
+          <div className="catalog-pagination__controls">
+            <button
+              type="button"
+              className="catalog-pagination__button"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || isFetching}
+            >
+              Anterior
+            </button>
+
+            <div className="catalog-pagination__pages">
+              {visiblePages[0] > 1 && <span aria-hidden="true">...</span>}
+              {visiblePages.map((pageNumber) => (
+                <button
+                  type="button"
+                  key={pageNumber}
+                  className="catalog-pagination__page"
+                  aria-current={pageNumber === currentPage ? 'page' : undefined}
+                  onClick={() => handlePageChange(pageNumber)}
+                  disabled={isFetching}
+                >
+                  {pageNumber}
+                </button>
+              ))}
+              {visiblePages[visiblePages.length - 1] < totalPages && <span aria-hidden="true">...</span>}
+            </div>
+
+            <button
+              type="button"
+              className="catalog-pagination__button"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || isFetching}
+            >
+              Siguiente
+            </button>
+          </div>
+        </nav>
       )}
 
       <MerchantModal open={isModalOpen} benefit={selectedBenefit} onClose={closeModal} />

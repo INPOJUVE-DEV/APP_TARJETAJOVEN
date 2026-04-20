@@ -1,6 +1,6 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import './Profile.css';
 
@@ -45,14 +45,33 @@ const Profile = () => {
 
   return (
     <main className="profile-page" aria-labelledby="profile-title">
-      <h1 id="profile-title" className="profile-page__sr-only">
-        Perfil de tu Tarjeta Joven
-      </h1>
+      <header className="profile-page__header">
+        <p className="profile-page__eyebrow">Mi credencial</p>
+        <h1 id="profile-title">Tarjeta Joven</h1>
+        <p>Presenta tu QR para validar beneficios con comercios aliados.</p>
+      </header>
 
       <section className="profile-card" aria-labelledby="profile-credential-title">
-        <div className="profile-card__background" aria-hidden="true" />
         <div className="profile-card__content">
-          <div className="profile-card__qr">
+          <div className="profile-card__details">
+            <div className="profile-card__heading">
+              <span className="profile-card__status">Activa</span>
+              <h2 id="profile-credential-title">Credencial digital</h2>
+            </div>
+
+            <dl className="profile-card__list">
+              <div className="profile-card__item">
+                <dt>Titular</dt>
+                <dd>{displayName}</dd>
+              </div>
+              <div className="profile-card__item">
+                <dt>Edad</dt>
+                <dd>{displayAge} a&ntilde;os</dd>
+              </div>
+            </dl>
+          </div>
+
+          <aside className="profile-card__qr" aria-label="C&oacute;digo QR de tu credencial">
             <QRCodeSVG
               className="profile-card__qr-code"
               value={qrValue}
@@ -61,40 +80,27 @@ const Profile = () => {
               bgColor="#ffffff"
               fgColor="#101a16"
               role="img"
-              aria-label={`Codigo QR asignado ${qrValue}`}
-              title={qrValue}
+              aria-label="C&oacute;digo QR asignado a tu credencial"
             />
-            <span className="profile-card__qr-value">{qrValue}</span>
-          </div>
-          <div className="profile-card__details">
-            <h2 id="profile-credential-title">Tarjeta Joven</h2>
-            <dl className="profile-card__list">
-              <div className="profile-card__item">
-                <dt>Nombre</dt>
-                <dd>{displayName}</dd>
-              </div>
-              <div className="profile-card__item">
-                <dt>Edad</dt>
-                <dd>{displayAge} anios</dd>
-              </div>
-            </dl>
-          </div>
+            <span>Escanear para validar</span>
+          </aside>
         </div>
       </section>
 
-      <div
-        className="profile-banner"
-        role="img"
-        aria-label="Imagen representativa de Tarjeta Joven"
-      />
-      <button
-        type="button"
-        className="profile-logout"
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-      >
-        {isLoggingOut ? 'Cerrando sesion...' : 'Cerrar sesion'}
-      </button>
+      <Link className="profile-banner-link" to="/catalog" aria-label="Ver convenios disponibles">
+        <span className="profile-banner-link__image" aria-hidden="true" />
+      </Link>
+
+      <footer className="profile-page__footer">
+        <button
+          type="button"
+          className="profile-logout"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? 'Cerrando sesi\u00f3n...' : 'Cerrar sesi\u00f3n'}
+        </button>
+      </footer>
     </main>
   );
 };

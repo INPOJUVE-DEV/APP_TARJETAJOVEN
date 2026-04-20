@@ -98,7 +98,7 @@ const MerchantModal = ({ open, benefit, onClose }: MerchantModalProps) => {
                 )}
                 {benefit.address && (
                   <p className="merchant-modal__text">
-                    <strong>Dirección:</strong> {benefit.address}
+                    <strong>Direcci&oacute;n:</strong> {benefit.address}
                   </p>
                 )}
                 {benefit.schedule && (
@@ -115,7 +115,7 @@ const MerchantModal = ({ open, benefit, onClose }: MerchantModalProps) => {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Cómo llegar
+                  C&oacute;mo llegar
                 </a>
               </footer>
             </motion.div>

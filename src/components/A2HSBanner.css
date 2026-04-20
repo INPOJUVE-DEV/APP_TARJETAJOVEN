@@ -6,7 +6,8 @@
   width: min(420px, calc(100% - 32px));
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-divider);
+  box-shadow: var(--shadow-sm);
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
@@ -49,8 +50,8 @@
 
 .a2hs-banner__install {
   background: var(--color-primary-500);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: var(--color-button-on-primary);
+  border: 1px solid transparent;
 }
 
 .a2hs-banner__install:hover,
@@ -60,8 +61,8 @@
 
 .a2hs-banner__dismiss {
   background: var(--color-surface);
-  color: var(--color-accent-500);
-  border: 1px solid var(--color-accent-500);
+  color: var(--color-primary-600);
+  border: 1px solid var(--color-divider);
 }
 
 .a2hs-banner__close {

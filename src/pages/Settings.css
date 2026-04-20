@@ -16,7 +16,8 @@
 .settings-section {
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-divider);
+  box-shadow: none;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -55,10 +56,10 @@
 
 .settings-select,
 .settings-switch {
-  border: 1px solid var(--color-neutral-300);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
-  background: var(--color-neutral-100);
+  background: var(--color-surface-muted);
   color: var(--color-neutral-900);
   font-size: 1rem;
 }

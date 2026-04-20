@@ -31,8 +31,8 @@ const Settings = () => {
   return (
     <main className="settings-page" aria-labelledby="settings-title">
       <header>
-        <h1 id="settings-title">Configuración</h1>
-        <p>Ajusta tu experiencia sin salir de la aplicación.</p>
+        <h1 id="settings-title">Configuraci&oacute;n</h1>
+        <p>Ajusta tu experiencia sin salir de la aplicaci&oacute;n.</p>
       </header>
 
       <section className="settings-section" aria-labelledby="preferences-title">
@@ -49,7 +49,7 @@ const Settings = () => {
             value={language}
             onChange={handleLanguageChange}
           >
-            <option value="es">Español</option>
+            <option value="es">Espa&ntilde;ol</option>
             <option value="en">English</option>
           </select>
         </div>
@@ -57,7 +57,7 @@ const Settings = () => {
         <div className="settings-field">
           <div className="settings-field__info">
             <h3>Tema</h3>
-            <p>Cambia entre tema claro u oscuro sin recargar la página.</p>
+            <p>Cambia entre tema claro u oscuro sin recargar la p&aacute;gina.</p>
           </div>
           <select id="theme" className="settings-select" value={theme} onChange={handleThemeChange}>
             <option value="light">Claro</option>
