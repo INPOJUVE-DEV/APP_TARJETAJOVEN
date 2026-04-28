@@ -26,6 +26,19 @@ let queue: StoredEvent[] = [];
 let isFlushing = false;
 let listenersRegistered = false;
 
+const SENSITIVE_KEYS = new Set(['curp', 'auth0_id_token', 'auth0IdToken', 'token', 'authorization']);
+
+const sanitizePayload = (payload?: AnalyticsPayload) => {
+  if (!payload) {
+    return undefined;
+  }
+
+  return Object.entries(payload).reduce<Record<string, unknown>>((accumulator, [key, value]) => {
+    accumulator[key] = SENSITIVE_KEYS.has(key) ? '[redacted]' : value;
+    return accumulator;
+  }, {});
+};
+
 const loadQueue = () => {
   if (typeof window === 'undefined') {
     queue = [];
@@ -143,9 +156,11 @@ ensureListeners();
 void flushQueue();
 
 export const track = (event: AnalyticsEventName, payload?: AnalyticsPayload) => {
+  const sanitizedPayload = sanitizePayload(payload);
+
   if (env.isDev) {
     // eslint-disable-next-line no-console
-    console.debug('[analytics]', event, payload ?? null);
+    console.debug('[analytics]', event, sanitizedPayload ?? null);
   }
 
   if (typeof window === 'undefined') {
@@ -154,7 +169,7 @@ export const track = (event: AnalyticsEventName, payload?: AnalyticsPayload) => 
 
   const entry: StoredEvent = {
     event,
-    payload: payload as Record<string, unknown> | undefined,
+    payload: sanitizedPayload,
     timestamp: new Date().toISOString(),
     environment: env.mode,
   };

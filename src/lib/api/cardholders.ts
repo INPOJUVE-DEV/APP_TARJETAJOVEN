@@ -1,47 +1,40 @@
 import { apiFetch } from '../apiClient';
 
-export interface CardholderLookupResponse {
+export interface VerifyActivationRequest {
+  tarjetaNumero: string;
   curp: string;
-  nombres: string;
-  apellidos: string;
-  municipio?: string | null;
-  hasAccount: boolean;
 }
 
-export interface CreateAccountPayload {
-  curp: string;
-  username: string;
-  password: string;
+export interface VerifyActivationResponse {
+  can_activate: boolean;
+  message: string;
 }
 
-export interface CardholderRegistrationPayload {
-  nombres: string;
-  apellidos: string;
-  fechaNacimiento: string;
-  curp: string;
-  username: string;
-  calle: string;
-  numero: string;
-  cp: string;
-  colonia: string;
-  password: string;
-  aceptaTerminos: boolean;
+export interface CompleteActivationRequest {
+  tarjetaNumero: string;
+  auth0IdToken: string;
+}
+
+export interface CompleteActivationResponse {
+  activated: boolean;
+  message: string;
 }
 
 export const cardholderApi = {
-  lookupCurp: (curp: string) =>
-    apiFetch<CardholderLookupResponse>('/cardholders/lookup', {
+  verifyActivation: ({ tarjetaNumero, curp }: VerifyActivationRequest) =>
+    apiFetch<VerifyActivationResponse>('/cardholders/verify-activation', {
       method: 'POST',
-      body: JSON.stringify({ curp }),
+      body: JSON.stringify({
+        tarjeta_numero: tarjetaNumero,
+        curp,
+      }),
     }),
-  createAccount: ({ curp, username, password }: CreateAccountPayload) =>
-    apiFetch<void>(`/cardholders/${curp}/account`, {
+  completeActivation: ({ tarjetaNumero, auth0IdToken }: CompleteActivationRequest) =>
+    apiFetch<CompleteActivationResponse>('/cardholders/complete-activation', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
-    }),
-  submitRegistration: (payload: CardholderRegistrationPayload) =>
-    apiFetch<void>('/cardholders', {
-      method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        tarjeta_numero: tarjetaNumero,
+        auth0_id_token: auth0IdToken,
+      }),
     }),
 };

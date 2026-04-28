@@ -12,25 +12,25 @@ const DEFAULT_PROFILE = {
 };
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { profile, logout } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const displayName = useMemo(() => {
-    const parts = [user?.nombre, user?.apellidos].filter(Boolean);
+    const parts = [profile?.nombre, profile?.apellidos].filter(Boolean);
     return parts.length ? parts.join(' ') : DEFAULT_PROFILE.name;
-  }, [user?.nombre, user?.apellidos]);
+  }, [profile?.nombre, profile?.apellidos]);
 
   const displayAge = useMemo(() => {
-    if (typeof user?.edad === 'number' && !Number.isNaN(user.edad)) {
-      return user.edad;
+    if (typeof profile?.edad === 'number' && !Number.isNaN(profile.edad)) {
+      return profile.edad;
     }
     return DEFAULT_PROFILE.age;
-  }, [user?.edad]);
+  }, [profile?.edad]);
 
   const qrValue = useMemo(
-    () => user?.barcodeValue ?? DEFAULT_PROFILE.barcode,
-    [user?.barcodeValue],
+    () => profile?.barcodeValue ?? DEFAULT_PROFILE.barcode,
+    [profile?.barcodeValue],
   );
 
   const handleLogout = async () => {

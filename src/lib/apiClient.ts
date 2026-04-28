@@ -1,7 +1,6 @@
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { env } from '../config/env';
-import { clearStoredTokens, getStoredTokens } from './authStorage';
 
 const API_BASE_URL = env.apiBaseUrl;
 
@@ -24,11 +23,6 @@ const baseQuery = fetchBaseQuery({
       headers.set('Accept', 'application/json');
     }
 
-    const tokens = getStoredTokens();
-    if (tokens?.accessToken && !headers.has('Authorization')) {
-      headers.set('Authorization', `Bearer ${tokens.accessToken}`);
-    }
-
     return headers;
   },
 });
@@ -39,10 +33,6 @@ export const apiBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   extraOptions,
 ) => {
   const result = await baseQuery(args, api, extraOptions);
-
-  if (result.error && result.error.status === 401) {
-    clearStoredTokens();
-  }
 
   return result;
 };
@@ -67,6 +57,7 @@ const parsePayload = async (response: Response) => {
 
 export interface ApiFetchOptions {
   skipAuth?: boolean;
+  authToken?: string;
 }
 
 export const apiFetch = async <TResponse = unknown>(
@@ -84,9 +75,8 @@ export const apiFetch = async <TResponse = unknown>(
     headers.set('Accept', 'application/json');
   }
 
-  const tokens = getStoredTokens();
-  if (!options.skipAuth && tokens?.accessToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+  if (!options.skipAuth && options.authToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${options.authToken}`);
   }
 
   const response = await fetch(buildUrl(path), {
@@ -94,10 +84,6 @@ export const apiFetch = async <TResponse = unknown>(
     headers,
     credentials: 'include',
   });
-
-  if (response.status === 401) {
-    clearStoredTokens();
-  }
 
   const payload = await parsePayload(response);
 

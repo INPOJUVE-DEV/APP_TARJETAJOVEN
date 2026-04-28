@@ -5,16 +5,16 @@ import './Main.css';
 const highlights = [
   {
     title: 'Descuentos al instante',
-    description: 'Promos en cafés, bienestar y eventos aliados.'
+    description: 'Promos en cafes, bienestar y eventos aliados.',
   },
   {
-    title: 'Programas que suman',
-    description: 'Becas, talleres y apoyos con seguimiento simple.'
+    title: 'Programa mas seguro',
+    description: 'Tu acceso ahora se valida con Auth0 y se vincula directo con la API.',
   },
   {
-    title: 'Experiencias únicas',
-    description: 'Explora deporte, arte y voluntariados con más jóvenes.'
-  }
+    title: 'Credencial lista para usar',
+    description: 'Activa tu tarjeta una vez y entra a tu perfil digital cuando lo necesites.',
+  },
 ];
 
 const Main = () => {
@@ -23,7 +23,7 @@ const Main = () => {
       <Hero />
       <section className="main__section" aria-labelledby="main-title">
         <div className="main__header">
-          <h2 id="main-title">¿Por qué pedir tu Tarjeta Joven?</h2>
+          <h2 id="main-title">Por que activar tu Tarjeta Joven</h2>
           <p>Es tu identidad digital segura para acceder a servicios, descuentos y futuras integraciones.</p>
         </div>
         <div className="main__grid">
@@ -36,17 +36,17 @@ const Main = () => {
         </div>
         <div className="main__section-footer">
           <Link to="/help" className="main__link">
-            Conoce más
+            Conoce mas
           </Link>
         </div>
       </section>
       <section className="main__cta" aria-labelledby="cta-title">
         <div>
           <h2 id="cta-title">Comienza hoy</h2>
-          <p>Regístrate en línea y usa tu credencial digital al momento.</p>
+          <p>Valida tu tarjeta con CURP y completa el acceso seguro desde Auth0.</p>
         </div>
-        <Link to="/registro" className="main__cta-button">
-          Registrarme ahora
+        <Link to="/activar" className="main__cta-button">
+          Activar ahora
         </Link>
       </section>
     </main>

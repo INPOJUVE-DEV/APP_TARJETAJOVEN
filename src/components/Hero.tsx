@@ -10,25 +10,24 @@ const Hero = () => {
           Beneficios y oportunidades para las juventudes
         </h1>
         <p className="hero__subtitle">
-          Accede a descuentos, actividades pensados para ti.
-          Regístrate en minutos y comienza a disfrutar de tu credencial digital.
+          Activa tu tarjeta, vincula tu acceso seguro y usa tu credencial digital para entrar a
+          beneficios y actividades.
         </p>
         <div className="hero__actions" role="group" aria-label="Acciones principales">
-          <Link className="hero__cta hero__cta--primary" to="/registro">
-            Registrarme
+          <Link className="hero__cta hero__cta--primary" to="/activar">
+            Activar tarjeta
           </Link>
           <Link className="hero__cta hero__cta--outline" to="/login">
-            Iniciar sesión
+            Iniciar sesion
           </Link>
         </div>
       </div>
       <figure className="hero__figure">
         <img
           src="/icons/logo.svg"
-          alt="Gobierno del Estado de San Luis Potosí"
+          alt="Tarjeta Joven"
           className="hero__image"
         />
-      
       </figure>
     </section>
   );

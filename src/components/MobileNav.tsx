@@ -6,13 +6,13 @@ const items = [
   { to: '/perfil', label: 'Perfil' },
   { to: '/catalog', label: 'Catalogo' },
   { to: '/map', label: 'Mapa' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/settings', label: 'Ajustes' },
 ];
 
 const MobileNav = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const hiddenRoutes = ['/login', '/registro'];
+  const hiddenRoutes = ['/login', '/registro', '/activar', '/migrar-cuenta', '/auth/callback'];
 
   if (!isAuthenticated || hiddenRoutes.includes(location.pathname)) {
     return null;

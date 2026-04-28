@@ -1,20 +1,14 @@
 const DEFAULT_API_BASE_URL = '/api/v1';
 
-const rawApiBaseUrl = import.meta.env.VITE_API_URL;
-const apiBaseUrl =
-  typeof rawApiBaseUrl === 'string' && rawApiBaseUrl.trim().length > 0
-    ? rawApiBaseUrl.trim()
-    : DEFAULT_API_BASE_URL;
+const normalizeEnvValue = (value: unknown) =>
+  typeof value === 'string' && value.trim().length > 0 ? value.trim() : '';
+
+const rawApiBaseUrl = normalizeEnvValue(import.meta.env.VITE_API_BASE_URL) || normalizeEnvValue(import.meta.env.VITE_API_URL);
+const apiBaseUrl = rawApiBaseUrl || DEFAULT_API_BASE_URL;
 
 if (import.meta.env.PROD && /^https?:\/\//i.test(apiBaseUrl) && apiBaseUrl.startsWith('http://')) {
-  throw new Error('VITE_API_URL debe usar https en produccion.');
+  throw new Error('VITE_API_BASE_URL debe usar https en produccion.');
 }
-
-const rawIdentityValidationUrl = import.meta.env.VITE_ID_VALIDATION_URL;
-const identityValidationUrl =
-  typeof rawIdentityValidationUrl === 'string' && rawIdentityValidationUrl.trim().length > 0
-    ? rawIdentityValidationUrl.trim()
-    : '';
 
 const mode = import.meta.env.MODE;
 const rawVersion =
@@ -33,12 +27,20 @@ export const env = {
   isDev: import.meta.env.DEV,
   apiBaseUrl,
   defaultApiBaseUrl: DEFAULT_API_BASE_URL,
-  identityValidationUrl,
-  analyticsUrl: import.meta.env.VITE_ANALYTICS_URL ?? '',
-  mapsUrl: import.meta.env.VITE_MAPS_URL ?? '',
-  sentryDsn: import.meta.env.VITE_SENTRY_DSN ?? '',
+  analyticsUrl: normalizeEnvValue(import.meta.env.VITE_ANALYTICS_URL),
+  mapsUrl: normalizeEnvValue(import.meta.env.VITE_MAPS_URL),
+  sentryDsn: normalizeEnvValue(import.meta.env.VITE_SENTRY_DSN),
   sentryRelease,
   sentryEnvironment: mode,
+  auth0Domain: normalizeEnvValue(import.meta.env.VITE_AUTH0_DOMAIN),
+  auth0ClientId: normalizeEnvValue(import.meta.env.VITE_AUTH0_CLIENT_ID),
+  auth0Audience: normalizeEnvValue(import.meta.env.VITE_AUTH0_AUDIENCE),
+  auth0RedirectUri:
+    normalizeEnvValue(import.meta.env.VITE_AUTH0_REDIRECT_URI) ||
+    (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : ''),
+  auth0LogoutRedirectUri:
+    normalizeEnvValue(import.meta.env.VITE_AUTH0_LOGOUT_REDIRECT_URI) ||
+    (typeof window !== 'undefined' ? `${window.location.origin}/login` : ''),
 };
 
 export type AppEnv = typeof env;

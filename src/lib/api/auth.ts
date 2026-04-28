@@ -1,10 +1,4 @@
-import type { AuthTokens } from '../authStorage';
 import { apiFetch } from '../apiClient';
-
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
 
 export interface UserProfile {
   id: string;
@@ -18,17 +12,13 @@ export interface UserProfile {
   fotoUrl?: string | null;
   portadaUrl?: string | null;
   barcodeValue?: string | null;
+  auth0UserId?: string | null;
+  cardholderSyncId?: string | null;
 }
 
 export const authApi = {
-  login: (payload: LoginRequest) =>
-    apiFetch<AuthTokens>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }, { skipAuth: true }),
-  logout: () =>
-    apiFetch<void>('/auth/logout', {
-      method: 'POST',
+  profile: (accessToken: string) =>
+    apiFetch<UserProfile>('/me', undefined, {
+      authToken: accessToken,
     }),
-  profile: () => apiFetch<UserProfile>('/me'),
 };

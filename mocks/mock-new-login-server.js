@@ -3,39 +3,26 @@ const { URL } = require('url');
 
 const PORT = Number(process.env.MOCK_NEW_LOGIN_PORT ?? 4100);
 
-const identityResponse = {
-  nombre: 'MARIA GUADALUPE',
-  apellido_paterno: 'SANCHEZ',
-  apellido_materno: 'PEREZ',
-  curp: 'SAPM900101MBCNRR06',
-  discapacidad: false,
-  id_ine: '0000000000123',
-  municipio: 'Tijuana',
-  seccional: '0456',
-  calle: 'Av. Siempre Viva',
-  numero_ext: '742',
-  numero_int: '3B',
-  colonia: 'Centro',
+const mockTokens = {
+  accessToken: 'mock-access-token',
 };
 
-const submissions = [];
+const validActivation = {
+  tarjeta_numero: 'TJ-000123',
+  curp: 'SAPM900101MBCNRR06',
+};
+
 const mockUser = {
   id: 'user-001',
   nombre: 'MARIA GUADALUPE',
   apellidos: 'SANCHEZ PEREZ',
-  curp: 'SAPM900101MBCNRR06',
   email: 'pruebas@tarjetajoven.local',
   municipio: 'Tijuana',
   telefono: '6640000000',
+  barcodeValue: 'TJ-000123',
+  cardholderSyncId: 'sync-001',
 };
-const mockCredentials = {
-  username: 'pruebas@tarjetajoven.local',
-  password: 'Prueba123',
-};
-const mockTokens = {
-  accessToken: 'mock-access-token',
-  refreshToken: 'mock-refresh-token',
-};
+
 const catalogItems = [
   {
     id: 'conv-001',
@@ -56,81 +43,12 @@ const catalogItems = [
     municipio: 'Tijuana',
     descuento: '15% de descuento en consumo',
     direccion: 'Blvd. Agua Caliente 4558, Aviacion, Tijuana',
-    horario: 'Todos los d\u00edas, 8:00 a 20:00',
-    descripcion: 'V\u00e1lido en bebidas preparadas y alimentos. No acumulable con otras promociones.',
+    horario: 'Todos los dias, 8:00 a 20:00',
+    descripcion: 'Valido en bebidas preparadas y alimentos.',
     lat: 32.5149,
     lng: -117.0116,
   },
-  {
-    id: 'conv-003',
-    nombre: 'Libreria Horizonte',
-    categoria: 'Educaci\u00f3n',
-    municipio: 'Mexicali',
-    descuento: '10% en libros y material escolar',
-    direccion: 'Calz. Independencia 2100, Mexicali',
-    horario: 'Lunes a sabado, 10:00 a 19:00',
-    descripcion: 'Aplica en compras en tienda f\u00edsica presentando identificaci\u00f3n y tarjeta.',
-    lat: 32.6519,
-    lng: -115.4683,
-  },
-  {
-    id: 'conv-004',
-    nombre: 'Gimnasio Activa BC',
-    categoria: 'Deporte',
-    municipio: 'Ensenada',
-    descuento: 'Inscripcion gratis y 20% en mensualidad',
-    direccion: 'Av. Ruiz 780, Zona Centro, Ensenada',
-    horario: 'Lunes a viernes, 6:00 a 22:00',
-    descripcion: 'Beneficio disponible para nuevas inscripciones.',
-    lat: 31.8667,
-    lng: -116.5964,
-  },
-  {
-    id: 'conv-005',
-    nombre: 'Optica Mirada Joven',
-    categoria: 'Salud',
-    municipio: 'Tecate',
-    descuento: '30% en examen de la vista',
-    direccion: 'Benito Juarez 145, Zona Centro, Tecate',
-    horario: 'Lunes a sabado, 9:00 a 18:00',
-    descripcion: 'Incluye diagnostico basico y ajuste de armazon.',
-    lat: 32.5672,
-    lng: -116.6251,
-  },
-  {
-    id: 'conv-006',
-    nombre: 'Transporte Escolar Norte',
-    categoria: 'Movilidad',
-    municipio: 'Playas de Rosarito',
-    descuento: '12% en rutas universitarias',
-    direccion: 'Blvd. Benito Juarez 310, Rosarito',
-    horario: 'Lunes a viernes, 7:00 a 18:00',
-    descripcion: 'Sujeto a disponibilidad de ruta y cupo.',
-    lat: 32.3426,
-    lng: -117.0612,
-  },
 ];
-
-const extraCatalogCategories = ['Alimentos', 'Educaci\u00f3n', 'Deporte', 'Salud', 'Movilidad', 'Entretenimiento'];
-const extraCatalogMunicipalities = ['Tijuana', 'Mexicali', 'Ensenada', 'Tecate', 'Playas de Rosarito'];
-
-for (let index = 7; index <= 32; index += 1) {
-  const category = extraCatalogCategories[(index - 7) % extraCatalogCategories.length];
-  const municipality = extraCatalogMunicipalities[(index - 7) % extraCatalogMunicipalities.length];
-
-  catalogItems.push({
-    id: `conv-${String(index).padStart(3, '0')}`,
-    nombre: `Convenio Joven ${String(index).padStart(2, '0')}`,
-    categoria: category,
-    municipio: municipality,
-    descuento: `${10 + (index % 5) * 5}% de beneficio`,
-    direccion: `Sucursal ${index}, ${municipality}`,
-    horario: 'Lunes a viernes, 9:00 a 18:00',
-    descripcion: `Beneficio mock para validar paginaci\u00f3n y filtros en ${category}.`,
-    lat: 32.5 + (index % 5) * 0.01,
-    lng: -117 + (index % 6) * 0.01,
-  });
-}
 
 const setCorsHeaders = (req, baseHeaders = {}) => {
   const origin = req.headers.origin;
@@ -178,68 +96,15 @@ const collectRequestBody = (req) =>
     req.on('error', reject);
   });
 
-const normalizeForSearch = (value) =>
-  String(value ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-
-const matchesFilter = (value, filter) => {
-  if (!filter) {
-    return true;
+const parseJsonBody = async (req, res) => {
+  try {
+    const body = await collectRequestBody(req);
+    const text = body.toString('utf8').trim();
+    return text ? JSON.parse(text) : {};
+  } catch {
+    sendJson(req, res, 400, { message: 'Payload JSON no valido.' });
+    return null;
   }
-
-  return filter
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .some((item) => normalizeForSearch(value) === normalizeForSearch(item));
-};
-
-const matchesSearch = (item, query) => {
-  if (!query) {
-    return true;
-  }
-
-  const haystack = [
-    item.nombre,
-    item.categoria,
-    item.municipio,
-    item.descuento,
-    item.direccion,
-    item.descripcion,
-  ]
-    .map(normalizeForSearch)
-    .join(' ');
-
-  return haystack.includes(normalizeForSearch(query));
-};
-
-const handleCatalogRequest = (req, res, requestUrl) => {
-  const category = requestUrl.searchParams.get('categoria');
-  const municipality = requestUrl.searchParams.get('municipio');
-  const query = requestUrl.searchParams.get('q');
-  const page = Math.max(Number(requestUrl.searchParams.get('page') ?? 1), 1);
-  const pageSize = Math.max(Number(requestUrl.searchParams.get('pageSize') ?? 25), 1);
-
-  const filteredItems = catalogItems.filter(
-    (item) =>
-      matchesFilter(item.categoria, category) &&
-      matchesFilter(item.municipio, municipality) &&
-      matchesSearch(item, query),
-  );
-  const total = filteredItems.length;
-  const totalPages = Math.max(Math.ceil(total / pageSize), 1);
-  const start = (page - 1) * pageSize;
-  const items = filteredItems.slice(start, start + pageSize);
-
-  sendJson(req, res, 200, {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
-  });
 };
 
 const server = http.createServer(async (req, res) => {
@@ -250,46 +115,55 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.method === 'POST' && requestUrl.pathname === '/mock-ine') {
-    // Solo consumimos el cuerpo para liberar el socket; no es necesario parsear el multipart.
-    try {
-      await collectRequestBody(req);
-    } catch {
-      sendJson(req, res, 500, { message: 'Error al leer los archivos de prueba.' });
+  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/cardholders/verify-activation') {
+    const parsed = await parseJsonBody(req, res);
+    if (!parsed) {
       return;
     }
 
-    sendJson(req, res, 200, identityResponse);
+    const tarjetaNumero = String(parsed.tarjeta_numero ?? '').trim().toUpperCase();
+    const curp = String(parsed.curp ?? '').trim().toUpperCase();
+
+    if (!tarjetaNumero || !curp) {
+      sendJson(req, res, 422, { message: 'Los datos ingresados no son validos.' });
+      return;
+    }
+
+    if (tarjetaNumero !== validActivation.tarjeta_numero || curp !== validActivation.curp) {
+      sendJson(req, res, 422, { message: 'No se pudo validar la tarjeta con los datos proporcionados.' });
+      return;
+    }
+
+    sendJson(req, res, 200, {
+      can_activate: true,
+      message: 'Validacion correcta',
+    });
     return;
   }
 
-  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/auth/login') {
-    let parsed = null;
-
-    try {
-      const body = await collectRequestBody(req);
-      const text = body.toString('utf8').trim();
-      parsed = text ? JSON.parse(text) : {};
-    } catch {
-      sendJson(req, res, 400, { message: 'Payload JSON no valido.' });
+  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/cardholders/complete-activation') {
+    const parsed = await parseJsonBody(req, res);
+    if (!parsed) {
       return;
     }
 
-    const username = String(parsed.username ?? '').trim().toLowerCase();
-    const password = String(parsed.password ?? '');
+    const tarjetaNumero = String(parsed.tarjeta_numero ?? '').trim().toUpperCase();
+    const auth0IdToken = String(parsed.auth0_id_token ?? '').trim();
 
-    if (username !== mockCredentials.username || password !== mockCredentials.password) {
-      sendJson(req, res, 401, { message: 'Credenciales invalidas.' });
+    if (!tarjetaNumero || !auth0IdToken) {
+      sendJson(req, res, 422, { message: 'Los datos ingresados no son validos.' });
       return;
     }
 
-    sendJson(req, res, 200, mockTokens);
-    return;
-  }
+    if (tarjetaNumero !== validActivation.tarjeta_numero) {
+      sendJson(req, res, 409, { message: 'Esta tarjeta ya tiene una cuenta asociada.' });
+      return;
+    }
 
-  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/auth/logout') {
-    res.writeHead(204, setCorsHeaders(req));
-    res.end();
+    sendJson(req, res, 200, {
+      activated: true,
+      message: 'Cuenta vinculada correctamente',
+    });
     return;
   }
 
@@ -298,7 +172,7 @@ const server = http.createServer(async (req, res) => {
     const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
     if (!token || token !== mockTokens.accessToken) {
-      sendJson(req, res, 401, { message: 'No autorizado.' });
+      sendJson(req, res, 401, { message: 'Tu sesion expiro. Inicia sesion nuevamente.' });
       return;
     }
 
@@ -308,45 +182,20 @@ const server = http.createServer(async (req, res) => {
 
   if (
     req.method === 'GET' &&
-    ['/api/v1/catalog', '/catalog', '/api/v1/convenios', '/api/v1/benefits'].includes(
-      requestUrl.pathname,
-    )
+    ['/api/v1/catalog', '/catalog', '/api/v1/convenios', '/api/v1/benefits'].includes(requestUrl.pathname)
   ) {
-    handleCatalogRequest(req, res, requestUrl);
-    return;
-  }
-
-  if (req.method === 'POST' && requestUrl.pathname === '/api/v1/cardholders') {
-    let parsed = null;
-
-    try {
-      const body = await collectRequestBody(req);
-      const text = body.toString('utf8').trim();
-      parsed = text ? JSON.parse(text) : {};
-    } catch {
-      sendJson(req, res, 400, { message: 'Payload JSON no válido.' });
-      return;
-    }
-
-    submissions.push({
-      receivedAt: new Date().toISOString(),
-      ...parsed,
+    sendJson(req, res, 200, {
+      items: catalogItems,
+      total: catalogItems.length,
+      page: 1,
+      pageSize: catalogItems.length,
+      totalPages: 1,
     });
-
-    sendJson(req, res, 201, {
-      message: 'Registro simulado almacenado correctamente.',
-      totalSubmissions: submissions.length,
-    });
-    return;
-  }
-
-  if (req.method === 'GET' && requestUrl.pathname === '/api/v1/cardholders') {
-    sendJson(req, res, 200, submissions);
     return;
   }
 
   if (req.method === 'GET' && requestUrl.pathname === '/health') {
-    sendJson(req, res, 200, { status: 'ok', submissions: submissions.length });
+    sendJson(req, res, 200, { status: 'ok' });
     return;
   }
 
@@ -354,13 +203,10 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Mock de nuevo registro escuchando en http://localhost:${PORT}`);
+  console.log(`Mock de activacion escuchando en http://localhost:${PORT}`);
   console.log('Endpoints disponibles:');
-  console.log(`  POST http://localhost:${PORT}/mock-ine`);
-  console.log(`  POST http://localhost:${PORT}/api/v1/auth/login`);
-  console.log(`  POST http://localhost:${PORT}/api/v1/auth/logout`);
+  console.log(`  POST http://localhost:${PORT}/api/v1/cardholders/verify-activation`);
+  console.log(`  POST http://localhost:${PORT}/api/v1/cardholders/complete-activation`);
   console.log(`  GET  http://localhost:${PORT}/api/v1/me`);
   console.log(`  GET  http://localhost:${PORT}/api/v1/catalog`);
-  console.log(`  POST http://localhost:${PORT}/api/v1/cardholders`);
-  console.log(`  GET  http://localhost:${PORT}/api/v1/cardholders`);
 });

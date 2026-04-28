@@ -1,141 +1,76 @@
-﻿import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
-import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Login.css';
 
-const PASSWORD_MIN_LENGTH = 8;
-const EMAIL_MAX_LENGTH = 254;
-const PASSWORD_MAX_LENGTH = 128;
-
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState('');
-  const [statusMessage, setStatusMessage] = useState('');
-  const { login, status: authStatus, errorMessage } = useAuth();
+  const { login, status, errorMessage, clearErrorMessage } = useAuth();
   const navigate = useNavigate();
-
-  const isUsernameValid = useMemo(() => isValidEmail(username), [username]);
-  const isPasswordValid = useMemo(() => isSecurePassword(password, PASSWORD_MIN_LENGTH), [password]);
-  const canSubmit = isUsernameValid && isPasswordValid && authStatus !== 'loading';
+  const location = useLocation();
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    if (authStatus === 'authenticated') {
-      setStatusMessage('Listo, entrando a tu perfil.');
-      setFormError('');
+    if (status === 'authenticated') {
       navigate('/perfil', { replace: true });
     }
-  }, [authStatus, navigate]);
+  }, [navigate, status]);
 
   useEffect(() => {
-    if (errorMessage && authStatus !== 'authenticated') {
-      setFormError(errorMessage);
+    if (status === 'unlinked') {
+      navigate('/migrar-cuenta', {
+        replace: true,
+        state: { from: location.pathname },
+      });
     }
-  }, [errorMessage, authStatus]);
+  }, [location.pathname, navigate, status]);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setFormError('');
+  const handleLogin = async () => {
+    clearErrorMessage();
     setStatusMessage('');
 
-    if (!isUsernameValid) {
-      setFormError('Escribe un correo electrónico válido.');
-      return;
-    }
-
-    if (!isPasswordValid) {
-      setFormError(
-        'Tu contraseña debe tener mínimo 8 caracteres con mayúsculas, minúsculas y números.',
-      );
-      return;
-    }
-
     try {
-      const normalizedUsername = username.trim().toLowerCase();
-      await login({
-        username: normalizedUsername,
-        password,
-      });
-      setStatusMessage('Ingreso exitoso. Cargando tus datos...');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'No pudimos iniciar sesión. Intenta de nuevo.';
-      setFormError(message);
-    }
-  };
+      const result = await login();
+      if (result.mode === 'redirect') {
+        setStatusMessage('Abriendo el acceso seguro de Auth0...');
+        return;
+      }
 
-  const handlePhysicalCardClick = () => {
-    navigate('/registro/tarjeta-fisica');
+      setStatusMessage('Acceso validado. Estamos cargando tu perfil.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'No pudimos iniciar sesion.');
+    }
   };
 
   return (
     <main className="login" aria-labelledby="login-title">
-      <section className="login__card" aria-labelledby="login-form">
-        <h1 id="login-title" className="visually-hidden">
-          Inicia sesión con tu usuario
-        </h1>
-        <h2 id="login-form">Inicia sesión</h2>
-        <form className="login__form" onSubmit={handleSubmit} noValidate>
-          <div className={`login__field ${username && !isUsernameValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="username">Correo electrónico</label>
-            <input
-              id="username"
-              type="email"
-              value={username}
-              onChange={(event) => {
-                setUsername(event.target.value);
-                setStatusMessage('');
-              }}
-              inputMode="email"
-              placeholder="correo@dominio.com"
-              autoComplete="username"
-              maxLength={EMAIL_MAX_LENGTH}
-              required
-            />
-            {!isUsernameValid && username && (
-              <p className="login__error">Ingresa un correo válido.</p>
-            )}
-          </div>
+      <section className="login__card" aria-labelledby="login-title">
+        <h1 id="login-title">Inicia sesion con Auth0</h1>
+        <p className="login__hint">
+          Tu acceso ahora se valida con Auth0. Usa esta opcion si tu tarjeta ya esta vinculada a una
+          cuenta segura.
+        </p>
 
-          <div className={`login__field ${password && !isPasswordValid ? 'is-invalid' : ''}`}>
-            <label htmlFor="password">Contraseña</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => {
-                setPassword(event.target.value);
-                setStatusMessage('');
-              }}
-              minLength={PASSWORD_MIN_LENGTH}
-              maxLength={PASSWORD_MAX_LENGTH}
-              placeholder="Escribe tu contraseña"
-              autoComplete="current-password"
-              required
-            />
-            {!isPasswordValid && password && (
-              <p className="login__error">
-                Debe tener mínimo 8 caracteres con mayúsculas, minúsculas y números.
-              </p>
-            )}
-          </div>
-
-          <button type="submit" className="login__submit" disabled={!canSubmit}>
-            {authStatus === 'loading' ? 'Verificando...' : 'Iniciar sesión'}
+        <div className="login__form">
+          <button type="button" className="login__submit" onClick={handleLogin} disabled={status === 'loading'}>
+            {status === 'loading' ? 'Validando...' : 'Continuar con Auth0'}
           </button>
-          <button type="button" className="login__secondary" onClick={handlePhysicalCardClick}>
-            Ya tengo tarjeta física
-          </button>
+          <Link to="/activar" className="login__secondary">
+            Activar mi tarjeta
+          </Link>
+          <Link to="/migrar-cuenta" className="login__secondary">
+            Necesito migrar mi cuenta
+          </Link>
           <p className="login__status" role="status" aria-live="polite">
-            {formError || statusMessage}
+            {errorMessage || statusMessage}
           </p>
-        </form>
+        </div>
       </section>
 
       <footer className="login__footer">
-        <p>¿Aún no tienes cuenta?</p>
-        <Link to="/registro">Registrarme ahora</Link>
+        <p>¿Aun no vinculas tu tarjeta?</p>
+        <Link to="/activar">Activarla ahora</Link>
       </footer>
+
       <div className="login__brand" aria-hidden="true">
         <img src="/icons/logo.svg" alt="Tarjeta Joven" />
       </div>
@@ -144,4 +79,3 @@ const Login = () => {
 };
 
 export default Login;
-

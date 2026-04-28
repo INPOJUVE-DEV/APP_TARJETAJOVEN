@@ -18,105 +18,71 @@ const categories: { id: HelpCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'Todo' },
   { id: 'program', label: 'Programa' },
   { id: 'discounts', label: 'Descuentos' },
-  { id: 'support', label: 'Soporte t�cnico' },
+  { id: 'support', label: 'Soporte tecnico' },
 ];
 
 const faqs: FAQ[] = [
   {
-    id: 'eligibility',
+    id: 'activation',
     category: 'program',
-    question: '�Qui�n puede solicitar la Tarjeta Joven?',
-    answer: 'J�venes de 12 a 29 a�os con identificaci�n vigente y un correo activo.',
+    question: 'Quien puede activar la Tarjeta Joven desde la app?',
+    answer: 'Personas que ya tienen una tarjeta fisica y necesitan vincular su acceso digital.',
     details: [
-      'Puedes registrarte en l�nea o acudir a un m�dulo del INPOJUVE.',
-      'Solo necesitas tu CURP, identificaci�n y comprobante de domicilio.',
+      'La app valida numero de tarjeta y CURP.',
+      'Despues completa el acceso seguro con Auth0.',
     ],
-    tags: ['requisitos', 'registro'],
+    tags: ['activacion', 'curp', 'tarjeta'],
+  },
+  {
+    id: 'new-registration',
+    category: 'program',
+    question: 'Puedo darme de alta por primera vez desde esta app?',
+    answer: 'No. El alta oficial ya no se realiza desde la app.',
+    details: [
+      'Si aun no formas parte del programa, consulta los canales oficiales de Tarjeta Joven.',
+      'La app solo ofrece activacion de tarjeta y login para cuentas ya vinculadas.',
+    ],
+    tags: ['registro', 'alta'],
   },
   {
     id: 'digital-card',
     category: 'program',
-    question: '�La tarjeta es digital o f�sica?',
-    answer: 'Nace digital y puedes vincularla con tu tarjeta f�sica si ya la tienes.',
-    details: ['Funciona incluso sin datos. Solo abre la app y muestra tu credencial.'],
-    tags: ['credencial', 'digital'],
-  },
-  {
-    id: 'updates',
-    category: 'program',
-    question: '�C�mo me entero de nuevas convocatorias?',
-    answer: 'Activa las notificaciones y revisa la secci�n Novedades una vez por semana.',
-    links: [
-      {
-        label: 'Calendario de oportunidades',
-        url: 'https://whatsapp.com/channel/0029VbB6m3M42DcWMy5Wwh2S',
-      },
-    ],
-    tags: ['notificaciones', 'convocatorias'],
+    question: 'La tarjeta es digital o fisica?',
+    answer: 'Tu credencial digital se vincula a la tarjeta fisica y te sirve para mostrar beneficios.',
+    details: ['Una vez vinculada, puedes entrar a tu perfil y mostrar tu QR.'],
+    tags: ['credencial', 'perfil'],
   },
   {
     id: 'discounts-how',
     category: 'discounts',
-    question: '�C�mo uso un descuento en un aliado?',
-    answer:
-      'Busca el comercio en el cat�logo o mapa, revisa las condiciones y muestra tu tarjeta desde el celular al pagar.',
-    details: ['Algunos aliados solo aplican el beneficio en d�as u horarios espec�ficos.'],
-    tags: ['beneficios', 'mapa'],
+    question: 'Como uso un descuento en un aliado?',
+    answer: 'Busca el comercio en el catalogo o en el mapa y presenta tu credencial digital al pagar.',
+    details: ['Algunos beneficios tienen restricciones de horario o sucursal.'],
+    tags: ['beneficios', 'mapa', 'catalogo'],
   },
   {
-    id: 'new-allies',
-    category: 'discounts',
-    question: '�Cada cu�ndo hay nuevos descuentos?',
-    answer: 'Cada mes se suman alianzas y renovamos convenios.',
+    id: 'password',
+    category: 'support',
+    question: 'Olvide mi acceso. Que hago?',
+    answer: 'Usa el flujo de Auth0 desde la pantalla de inicio de sesion.',
     details: [
-      'Te avisaremos cuando haya beneficios cerca de ti.',
-      'Puedes sugerir aliados con este formulario.',
+      'Si tu cuenta ya esta vinculada, Auth0 gestiona la recuperacion.',
+      'Si aun no esta vinculada, primero activa tu tarjeta.',
     ],
-    links: [
-      {
-        label: 'Sugerir un nuevo aliado',
-        url: 'https://forms.cloud.microsoft/r/bXgU9VqpkN',
-      },
-    ],
-    tags: ['aliados', 'actualizaciones'],
+    tags: ['auth0', 'password', 'migracion'],
   },
   {
-    id: 'redeem-online',
-    category: 'discounts',
-    question: '�Puedo redimir beneficios en l�nea?',
-    answer:
-      'S�. Algunos aliados entregan c�digos o enlaces directos. Sigue las instrucciones del beneficio antes de aplicarlo.',
-    tags: ['online', 'c�digos'],
-  },
-  {
-    id: 'recover-access',
+    id: 'support',
     category: 'support',
-    question: 'Olvid� mi contrase�a, �qu� hago?',
-    answer:
-      'En la pantalla de ingreso selecciona ��Olvidaste tu contrase�a?� y te enviaremos un enlace de recuperaci�n.',
-    tags: ['contrase�a', 'seguridad'],
-  },
-  {
-    id: 'offline-mode',
-    category: 'support',
-    question: '�La app funciona sin conexi�n?',
-    answer:
-      'S�. Tu credencial y este centro de ayuda est�n disponibles sin datos. El cat�logo y el mapa necesitan conexi�n para mostrar informaci�n actualizada.',
-    details: ['Cuando vuelvas a conectarte sincronizaremos todo autom�ticamente.'],
-    tags: ['offline', 'conexi�n'],
-  },
-  {
-    id: 'contact',
-    category: 'support',
-    question: 'Necesito ayuda, �con qui�n hablo?',
-    answer: 'Escr�benos desde Ajustes ? Enviar comentario o usa la mesa de ayuda oficial.',
+    question: 'Necesito ayuda adicional, con quien hablo?',
+    answer: 'Usa los canales oficiales del programa o escribe desde la seccion de ayuda institucional.',
     links: [
       {
         label: 'Mesa de ayuda Tarjeta Joven',
         url: 'https://www.instagram.com/inpojuve?igsh=MW9uc3E2eTkxcWU1bg==',
       },
     ],
-    tags: ['soporte', 'contacto'],
+    tags: ['contacto', 'soporte'],
   },
 ];
 
@@ -125,6 +91,7 @@ const normalizeText = (value: string) =>
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+
 const Help = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | HelpCategory>('all');
@@ -133,6 +100,7 @@ const Help = () => {
     if (typeof navigator === 'undefined') {
       return false;
     }
+
     return !navigator.onLine;
   });
 
@@ -167,12 +135,7 @@ const Help = () => {
         return true;
       }
 
-      const searchable = [
-        faq.question,
-        faq.answer,
-        ...(faq.details ?? []),
-        ...(faq.tags ?? []),
-      ]
+      const searchable = [faq.question, faq.answer, ...(faq.details ?? []), ...(faq.tags ?? [])]
         .map((value) => normalizeText(value))
         .join(' ');
 
@@ -183,12 +146,8 @@ const Help = () => {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = searchTerm.trim();
-    if (!trimmed) {
-      setLastTrackedQuery('');
-      return;
-    }
 
-    if (trimmed === lastTrackedQuery) {
+    if (!trimmed || trimmed === lastTrackedQuery) {
       return;
     }
 
@@ -205,6 +164,7 @@ const Help = () => {
     if (category === activeCategory) {
       return;
     }
+
     setActiveCategory(category);
     setLastTrackedQuery('');
     track('filter', {
@@ -217,6 +177,7 @@ const Help = () => {
     if (!hasActiveFilters) {
       return;
     }
+
     setSearchTerm('');
     setActiveCategory('all');
     setLastTrackedQuery('');
@@ -231,22 +192,20 @@ const Help = () => {
       <header className="help-page__header">
         <h1 id="help-title">Centro de ayuda</h1>
         <p className="help-page__intro">
-          Resuelve tus dudas del programa, los descuentos y el soporte técnico en minutos.
+          Resuelve dudas sobre activacion, beneficios y soporte tecnico en minutos.
         </p>
       </header>
 
       {isOffline && (
         <div className="help-page__offline" role="status">
-          <span aria-hidden="true" role="img">
-            ⚠️
-          </span>
-          <p>Sin conexión. Mostramos la información guardada.</p>
+          <span aria-hidden="true">!</span>
+          <p>Sin conexion. Mostramos la informacion guardada.</p>
         </div>
       )}
 
       <form className="help-page__search" onSubmit={handleSearchSubmit}>
         <label htmlFor="help-search" className="help-page__search-label">
-          ¿Qué necesitas saber?
+          Que necesitas saber?
         </label>
         <div className="help-page__search-bar">
           <input
@@ -254,7 +213,7 @@ const Help = () => {
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Escribe palabras clave como 'registro' o 'soporte'."
+            placeholder="Escribe palabras clave como activacion o soporte."
             aria-describedby="help-search-hint"
           />
           <button type="submit" className="help-page__search-button">
@@ -264,14 +223,14 @@ const Help = () => {
             type="button"
             className="help-page__reset-button"
             onClick={handleReset}
-            aria-label="Limpiar búsqueda"
+            aria-label="Limpiar busqueda"
             disabled={!hasActiveFilters}
           >
             Limpiar
           </button>
         </div>
         <p id="help-search-hint" className="help-page__hint">
-          La lista se actualiza al escribir. Presiona “Buscar” para guardar la consulta.
+          La lista se actualiza al escribir. Presiona Buscar para guardar la consulta.
         </p>
       </form>
 
@@ -289,10 +248,10 @@ const Help = () => {
         ))}
       </div>
 
-      <section className="help-page__results" aria-live="polite" aria-busy={false}>
+      <section className="help-page__results" aria-live="polite">
         {filteredFaqs.length === 0 ? (
           <p className="help-page__empty" role="status">
-            No encontramos coincidencias. Cambia las palabras o prueba otra categoría.
+            No encontramos coincidencias. Cambia las palabras o prueba otra categoria.
           </p>
         ) : (
           <ul className="help-page__list" role="list">
@@ -312,12 +271,7 @@ const Help = () => {
                     {faq.links && (
                       <div className="help-page__links">
                         {faq.links.map((link) => (
-                          <a
-                            key={link.url}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
+                          <a key={link.url} href={link.url} target="_blank" rel="noopener noreferrer">
                             {link.label}
                           </a>
                         ))}

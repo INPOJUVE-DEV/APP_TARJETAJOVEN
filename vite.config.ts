@@ -71,10 +71,11 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
+            urlPattern: ({ url }) =>
+              ['/api/v1/catalog', '/api/v1/convenios', '/api/v1/benefits'].includes(url.pathname),
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'catalog-cache',
               networkTimeoutSeconds: 10,
             },
           },
