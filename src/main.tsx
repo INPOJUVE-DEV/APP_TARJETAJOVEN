@@ -9,6 +9,7 @@ import './styles/theme.css';
 import { initSentry } from './lib/sentry';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AppAuthProvider } from './lib/AppAuthProvider';
+import { env } from './config/env';
 
 initSentry();
 
@@ -32,6 +33,6 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         </AppAuthProvider>
       </Provider>
     </BrowserRouter>
-    <SpeedInsights />
+    {env.enableSpeedInsights ? <SpeedInsights /> : null}
   </React.StrictMode>
 );

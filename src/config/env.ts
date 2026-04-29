@@ -3,6 +3,11 @@ const DEFAULT_API_BASE_URL = '/api/v1';
 const normalizeEnvValue = (value: unknown) =>
   typeof value === 'string' && value.trim().length > 0 ? value.trim() : '';
 
+const normalizeBooleanEnvValue = (value: unknown) => {
+  const normalized = normalizeEnvValue(value).toLowerCase();
+  return normalized === 'true' || normalized === '1' || normalized === 'yes';
+};
+
 const rawApiBaseUrl = normalizeEnvValue(import.meta.env.VITE_API_BASE_URL) || normalizeEnvValue(import.meta.env.VITE_API_URL);
 const apiBaseUrl = rawApiBaseUrl || DEFAULT_API_BASE_URL;
 
@@ -27,6 +32,7 @@ export const env = {
   isDev: import.meta.env.DEV,
   apiBaseUrl,
   defaultApiBaseUrl: DEFAULT_API_BASE_URL,
+  enableSpeedInsights: normalizeBooleanEnvValue(import.meta.env.VITE_ENABLE_SPEED_INSIGHTS),
   analyticsUrl: normalizeEnvValue(import.meta.env.VITE_ANALYTICS_URL),
   mapsUrl: normalizeEnvValue(import.meta.env.VITE_MAPS_URL),
   sentryDsn: normalizeEnvValue(import.meta.env.VITE_SENTRY_DSN),

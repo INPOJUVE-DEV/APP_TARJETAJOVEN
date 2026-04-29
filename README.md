@@ -27,6 +27,7 @@ VITE_AUTH0_AUDIENCE=https://api.tarjetajoven.local
 VITE_AUTH0_DB_CONNECTION=Username-Password-Authentication
 VITE_AUTH0_REDIRECT_URI=http://localhost:3000/auth/callback
 VITE_AUTH0_LOGOUT_REDIRECT_URI=http://localhost:3000/login
+# VITE_ENABLE_SPEED_INSIGHTS=false
 ```
 
 4. Levanta la app:
@@ -58,3 +59,9 @@ npm run dev
 - Los datos sensibles se excluyen de analytics y logs.
 - La sesion persistida se controla desde una capa embebida del frontend.
 - La PWA no cachea `/me` ni endpoints autenticados de activacion.
+
+## Despliegue en Netlify
+
+- Este repo incluye `netlify.toml` para reenviar `/api/v1/*` hacia Railway y mantener el frontend en mismo origen.
+- En Netlify, deja `VITE_API_BASE_URL` vacio o configuralo como `/api/v1`.
+- Si usas Netlify, no habilites `VITE_ENABLE_SPEED_INSIGHTS`; ese script solo debe cargarse en Vercel.

@@ -3,9 +3,12 @@ import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { env } from '../config/env';
 
 const API_BASE_URL = env.apiBaseUrl;
+const SAME_ORIGIN_API_BASE_URL = env.defaultApiBaseUrl;
+
+const isAbsoluteUrl = (value: string) => /^https?:\/\//i.test(value);
 
 const buildUrl = (path: string) => {
-  if (/^https?:\/\//i.test(path)) {
+  if (isAbsoluteUrl(path)) {
     return path;
   }
 
@@ -15,17 +18,49 @@ const buildUrl = (path: string) => {
   return `${normalizedBase}/${normalizedPath}`;
 };
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: API_BASE_URL,
-  credentials: 'include',
-  prepareHeaders: (headers) => {
-    if (!headers.has('Accept')) {
-      headers.set('Accept', 'application/json');
-    }
+const buildSameOriginUrl = (path: string) => {
+  if (isAbsoluteUrl(path)) {
+    return path;
+  }
 
-    return headers;
-  },
-});
+  const normalizedBase = SAME_ORIGIN_API_BASE_URL.replace(/\/+$/, '');
+  const normalizedPath = path.replace(/^\/+/, '');
+
+  return `${normalizedBase}/${normalizedPath}`;
+};
+
+const hasCrossOriginApiBase = () => {
+  if (typeof window === 'undefined' || !isAbsoluteUrl(API_BASE_URL)) {
+    return false;
+  }
+
+  try {
+    return new URL(API_BASE_URL).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+};
+
+const canRetryWithSameOrigin = (path: string) =>
+  hasCrossOriginApiBase() &&
+  !isAbsoluteUrl(path) &&
+  buildSameOriginUrl(path) !== buildUrl(path);
+
+const createBaseQuery = (baseUrl: string) =>
+  fetchBaseQuery({
+    baseUrl,
+    credentials: 'include',
+    prepareHeaders: (headers) => {
+      if (!headers.has('Accept')) {
+        headers.set('Accept', 'application/json');
+      }
+
+      return headers;
+    },
+  });
+
+const baseQuery = createBaseQuery(API_BASE_URL);
+const sameOriginBaseQuery = createBaseQuery(SAME_ORIGIN_API_BASE_URL);
 
 export const apiBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
   args,
@@ -33,6 +68,11 @@ export const apiBaseQuery: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   extraOptions,
 ) => {
   const result = await baseQuery(args, api, extraOptions);
+
+  const requestPath = typeof args === 'string' ? args : args.url;
+  if (result.error?.status === 'FETCH_ERROR' && canRetryWithSameOrigin(requestPath)) {
+    return sameOriginBaseQuery(args, api, extraOptions);
+  }
 
   return result;
 };
@@ -79,11 +119,23 @@ export const apiFetch = async <TResponse = unknown>(
     headers.set('Authorization', `Bearer ${options.authToken}`);
   }
 
-  const response = await fetch(buildUrl(path), {
+  const requestInit: RequestInit = {
     ...init,
     headers,
     credentials: 'include',
-  });
+  };
+
+  let response: Response;
+
+  try {
+    response = await fetch(buildUrl(path), requestInit);
+  } catch (error) {
+    if (!(error instanceof TypeError) || !canRetryWithSameOrigin(path)) {
+      throw error;
+    }
+
+    response = await fetch(buildSameOriginUrl(path), requestInit);
+  }
 
   const payload = await parsePayload(response);
 
