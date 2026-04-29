@@ -7,10 +7,10 @@ const Migration = () => {
     <main className="login" aria-labelledby="migration-title">
       <section className="login__card">
         <p className="activation__step">Migracion de acceso</p>
-        <h1 id="migration-title">Tu cuenta ahora usa Auth0</h1>
+        <h1 id="migration-title">Tu acceso ya es digital</h1>
         <p className="login__hint">
-          El acceso con contrasena local ya no esta disponible en el flujo nuevo. Si tu cuenta aun no
-          esta vinculada, activa tu tarjeta para crear o migrar tu acceso seguro.
+          Si tu cuenta aun no esta vinculada, activa tu tarjeta para crear tu acceso con correo y
+          contrasena. Si ya lo hiciste, intenta iniciar sesion de nuevo.
         </p>
         <div className="login__form">
           <Link to="/activar" className="login__submit">

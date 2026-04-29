@@ -9,7 +9,7 @@ const highlights = [
   },
   {
     title: 'Programa mas seguro',
-    description: 'Tu acceso ahora se valida con Auth0 y se vincula directo con la API.',
+    description: 'Tu acceso se crea con correo y contrasena y se vincula directo con la API.',
   },
   {
     title: 'Credencial lista para usar',
@@ -43,7 +43,7 @@ const Main = () => {
       <section className="main__cta" aria-labelledby="cta-title">
         <div>
           <h2 id="cta-title">Comienza hoy</h2>
-          <p>Valida tu tarjeta con CURP y completa el acceso seguro desde Auth0.</p>
+          <p>Valida tu tarjeta con CURP y crea tu acceso paso a paso desde la app.</p>
         </div>
         <Link to="/activar" className="main__cta-button">
           Activar ahora

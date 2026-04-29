@@ -44,9 +44,19 @@
   z-index: 1;
 }
 
+.login__card h1,
 .login__card h2 {
   margin: 0;
   color: inherit;
+}
+
+.login__eyebrow {
+  margin: 0;
+  color: var(--color-primary-600);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .login__form {
@@ -135,6 +145,9 @@
   font-weight: 600;
   cursor: pointer;
   transition: border-color var(--transition-base), color var(--transition-base), transform var(--transition-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .login__secondary:hover,

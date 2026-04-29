@@ -1,4 +1,4 @@
-# Flujo de activacion con Auth0
+# Flujo de activacion embebido
 
 Este documento resume el flujo vigente en la app.
 
@@ -8,6 +8,7 @@ Este documento resume el flujo vigente en la app.
 - `VITE_AUTH0_DOMAIN`
 - `VITE_AUTH0_CLIENT_ID`
 - `VITE_AUTH0_AUDIENCE`
+- `VITE_AUTH0_DB_CONNECTION`
 - `VITE_AUTH0_REDIRECT_URI`
 - `VITE_AUTH0_LOGOUT_REDIRECT_URI`
 
@@ -20,14 +21,15 @@ Este documento resume el flujo vigente en la app.
 POST /api/v1/cardholders/verify-activation
 ```
 
-3. Si la API responde `can_activate: true`, el frontend abre Auth0.
-4. Al completar la activacion o el login en Auth0, el frontend obtiene el `id_token` raw y llama:
+3. Si la API responde `can_activate: true`, la app muestra una pantalla intermedia y el boton `Crear mi acceso`.
+4. El usuario crea su acceso con correo y contrasena dentro de la app.
+5. La app autentica la sesion y obtiene el `id_token` para llamar:
 
 ```http
 POST /api/v1/cardholders/complete-activation
 ```
 
-5. Con la sesion ya vinculada, el frontend consulta:
+6. Con la sesion ya vinculada, el frontend consulta:
 
 ```http
 GET /api/v1/me

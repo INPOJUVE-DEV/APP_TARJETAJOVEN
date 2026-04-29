@@ -3,7 +3,7 @@
 SPA en React + TypeScript para Tarjeta Joven. Esta version usa el flujo nuevo de activacion:
 
 - validacion por `tarjeta_numero + CURP`
-- activacion y login de usuario final con Auth0
+- creacion e inicio de sesion con correo y contrasena desde la app
 - vinculacion contra API_TJ mediante `auth0_id_token`
 - carga de perfil desde `GET /api/v1/me`
 
@@ -24,6 +24,7 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 VITE_AUTH0_DOMAIN=your-tenant.us.auth0.com
 VITE_AUTH0_CLIENT_ID=your-client-id
 VITE_AUTH0_AUDIENCE=https://api.tarjetajoven.local
+VITE_AUTH0_DB_CONNECTION=Username-Password-Authentication
 VITE_AUTH0_REDIRECT_URI=http://localhost:3000/auth/callback
 VITE_AUTH0_LOGOUT_REDIRECT_URI=http://localhost:3000/login
 ```
@@ -38,9 +39,10 @@ npm run dev
 
 1. El usuario entra a `/activar`.
 2. Frontend llama `POST /api/v1/cardholders/verify-activation`.
-3. Si valida, abre Auth0 con popup y fallback a redirect.
-4. Con el `id_token` de Auth0 llama `POST /api/v1/cardholders/complete-activation`.
-5. Obtiene perfil desde `GET /api/v1/me`.
+3. Si valida, muestra una confirmacion intermedia y el boton `Crear mi acceso`.
+4. El usuario crea su acceso con correo y contrasena desde la app.
+5. Frontend obtiene un `id_token` y llama `POST /api/v1/cardholders/complete-activation`.
+6. Obtiene perfil desde `GET /api/v1/me`.
 
 ## Endpoints activos
 
@@ -53,5 +55,6 @@ npm run dev
 
 - La CURP no se guarda en `localStorage`, `sessionStorage` ni IndexedDB.
 - El frontend no construye `auth0_user_id`.
-- Los tokens no se persisten manualmente; la sesion la gestiona el SDK de Auth0.
+- Los datos sensibles se excluyen de analytics y logs.
+- La sesion persistida se controla desde una capa embebida del frontend.
 - La PWA no cachea `/me` ni endpoints autenticados de activacion.

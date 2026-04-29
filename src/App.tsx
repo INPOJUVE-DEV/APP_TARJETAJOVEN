@@ -32,6 +32,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/registro" element={<Navigate to="/activar" replace />} />
         <Route path="/activar" element={<Activation />} />
+        <Route path="/activation" element={<Activation />} />
         <Route path="/migrar-cuenta" element={<Migration />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/registro/tarjeta-fisica" element={<Navigate to="/activar" replace />} />

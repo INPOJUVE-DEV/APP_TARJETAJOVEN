@@ -35,6 +35,7 @@ export const env = {
   auth0Domain: normalizeEnvValue(import.meta.env.VITE_AUTH0_DOMAIN),
   auth0ClientId: normalizeEnvValue(import.meta.env.VITE_AUTH0_CLIENT_ID),
   auth0Audience: normalizeEnvValue(import.meta.env.VITE_AUTH0_AUDIENCE),
+  auth0DbConnection: normalizeEnvValue(import.meta.env.VITE_AUTH0_DB_CONNECTION),
   auth0RedirectUri:
     normalizeEnvValue(import.meta.env.VITE_AUTH0_REDIRECT_URI) ||
     (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : ''),

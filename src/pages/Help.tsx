@@ -29,7 +29,7 @@ const faqs: FAQ[] = [
     answer: 'Personas que ya tienen una tarjeta fisica y necesitan vincular su acceso digital.',
     details: [
       'La app valida numero de tarjeta y CURP.',
-      'Despues completa el acceso seguro con Auth0.',
+      'Despues creas tu acceso con correo y contrasena.',
     ],
     tags: ['activacion', 'curp', 'tarjeta'],
   },
@@ -64,12 +64,12 @@ const faqs: FAQ[] = [
     id: 'password',
     category: 'support',
     question: 'Olvide mi acceso. Que hago?',
-    answer: 'Usa el flujo de Auth0 desde la pantalla de inicio de sesion.',
+    answer: 'Inicia sesion con tu correo y contrasena desde la pantalla principal de acceso.',
     details: [
-      'Si tu cuenta ya esta vinculada, Auth0 gestiona la recuperacion.',
+      'Si tu cuenta ya esta vinculada, usa el canal oficial de recuperacion de acceso.',
       'Si aun no esta vinculada, primero activa tu tarjeta.',
     ],
-    tags: ['auth0', 'password', 'migracion'],
+    tags: ['password', 'migracion', 'acceso'],
   },
   {
     id: 'support',

@@ -1,107 +1,84 @@
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Snackbar, { SnackbarMessage } from '../components/Snackbar';
 import { cardholderApi } from '../lib/api/cardholders';
-import { clearPendingActivation, getPendingActivation, ActivationState } from '../lib/authFlow';
+import { clearPendingActivation, getPendingActivation, persistPendingActivation } from '../lib/authFlow';
 import { normalizeCurp, isValidCurp } from '../lib/curp';
 import {
+  ActivationErrorKind,
+  getActivationErrorKind,
   getRequestErrorMessage,
-  isAccountAlreadyLinkedError,
   isSessionExpiredError,
 } from '../lib/requestErrors';
 import { useAuth } from '../lib/useAuth';
+import { isSecurePassword, isValidEmail } from '../lib/validators';
 import './Activation.css';
 
 type ActivationUiState =
   | 'idle'
-  | 'loading'
-  | 'verified'
-  | 'auth_pending'
-  | 'completing'
+  | 'validating'
+  | 'validated'
+  | 'creating_access'
+  | 'linking_account'
   | 'success'
   | 'already_linked'
+  | 'blocked'
+  | 'invalid'
   | 'error';
+
+type ActivationCredentials = {
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
+
+type ActivationFormErrors = {
+  tarjetaNumero?: string;
+  curp?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  general?: string;
+};
+
+const INITIAL_CREDENTIALS: ActivationCredentials = {
+  email: '',
+  password: '',
+  confirmPassword: '',
+};
+
+const RECOVERABLE_STATES: ActivationUiState[] = [
+  'validated',
+  'already_linked',
+  'blocked',
+  'invalid',
+  'error',
+  'success',
+];
 
 const Activation = () => {
   const navigate = useNavigate();
   const {
-    hasIdentitySession,
-    isAuth0Ready,
-    signupAfterActivation,
-    getIdToken,
+    signupWithCredentials,
+    loginWithCredentials,
     refreshProfile,
     clearErrorMessage,
+    logout,
   } = useAuth();
 
   const [tarjetaNumero, setTarjetaNumero] = useState('');
   const [curp, setCurp] = useState('');
-  const [activationState, setActivationState] = useState<ActivationState | null>(() => getPendingActivation());
+  const [credentials, setCredentials] = useState<ActivationCredentials>(INITIAL_CREDENTIALS);
+  const [activationState, setActivationState] = useState(() => getPendingActivation());
   const [uiState, setUiState] = useState<ActivationUiState>(() =>
-    getPendingActivation() ? 'auth_pending' : 'idle',
+    getPendingActivation() ? 'validated' : 'idle',
   );
-  const [snackbar, setSnackbar] = useState<SnackbarMessage | null>(null);
-  const completionStartedRef = useRef(false);
+  const [formErrors, setFormErrors] = useState<ActivationFormErrors>({});
+  const [accessStepStarted, setAccessStepStarted] = useState(false);
 
   const normalizedTarjeta = useMemo(() => tarjetaNumero.trim().toUpperCase(), [tarjetaNumero]);
   const normalizedCurp = useMemo(() => normalizeCurp(curp), [curp]);
-  const isCurpValid = useMemo(() => isValidCurp(curp), [curp]);
-  const canValidate =
-    normalizedTarjeta.length > 0 &&
-    isCurpValid &&
-    uiState !== 'loading' &&
-    uiState !== 'auth_pending' &&
-    uiState !== 'completing';
-
-  const finishProfileLoad = useCallback(async () => {
-    await refreshProfile();
-    navigate('/perfil', { replace: true });
-  }, [navigate, refreshProfile]);
-
-  const completeActivation = useCallback(
-    async (state: ActivationState, idToken: string) => {
-      setUiState('completing');
-      clearErrorMessage();
-
-      try {
-        await cardholderApi.completeActivation({
-          tarjetaNumero: state.tarjetaNumero,
-          auth0IdToken: idToken,
-        });
-        clearPendingActivation();
-        setActivationState(null);
-        setUiState('success');
-        setSnackbar({
-          message: 'Cuenta vinculada correctamente. Estamos cargando tu perfil.',
-          variant: 'success',
-        });
-        await finishProfileLoad();
-      } catch (error) {
-        if (isAccountAlreadyLinkedError(error)) {
-          clearPendingActivation();
-          setUiState('already_linked');
-          setSnackbar({
-            message: 'Esta tarjeta ya tiene una cuenta asociada.',
-            variant: 'info',
-          });
-          return;
-        }
-
-        if (isSessionExpiredError(error)) {
-          clearPendingActivation();
-          setActivationState(null);
-        }
-
-        setUiState('error');
-        setSnackbar({
-          message: getRequestErrorMessage(error, {
-            fallbackMessage: 'No pudimos completar la vinculacion. Intenta de nuevo.',
-          }),
-          variant: 'error',
-        });
-      }
-    },
-    [clearErrorMessage, finishProfileLoad],
-  );
+  const normalizedEmail = useMemo(() => credentials.email.trim().toLowerCase(), [credentials.email]);
+  const isBusy = uiState === 'validating' || uiState === 'creating_access' || uiState === 'linking_account';
 
   useEffect(() => {
     const pendingActivation = getPendingActivation();
@@ -111,71 +88,105 @@ const Activation = () => {
 
     setActivationState(pendingActivation);
     setTarjetaNumero(pendingActivation.tarjetaNumero);
+    setUiState('validated');
   }, []);
 
-  useEffect(() => {
-    const pendingActivation = getPendingActivation();
-    if (!pendingActivation) {
-      return;
+  const clearFormErrors = () => {
+    setFormErrors({});
+  };
+
+  const currentStep = (() => {
+    if (uiState === 'linking_account' || uiState === 'success' || uiState === 'already_linked') {
+      return 3;
     }
 
-    if (!isAuth0Ready) {
-      setUiState('auth_pending');
-      return;
+    if (activationState?.verified) {
+      return 2;
     }
 
-    if (!hasIdentitySession || completionStartedRef.current) {
-      return;
-    }
+    return 1;
+  })();
 
-    completionStartedRef.current = true;
-    setUiState('completing');
-
-    void (async () => {
-      try {
-        const idToken = await getIdToken();
-        if (!idToken) {
-          throw new Error('No pudimos obtener tu token de identidad.');
-        }
-
-        await completeActivation(pendingActivation, idToken);
-      } catch (error) {
-        clearPendingActivation();
-        setActivationState(null);
-        setUiState('error');
-        setSnackbar({
-          message: getRequestErrorMessage(error, {
-            fallbackMessage: 'No pudimos completar la activacion. Intenta de nuevo.',
-          }),
-          variant: 'error',
-        });
-      } finally {
-        completionStartedRef.current = false;
-      }
-    })();
-  }, [completeActivation, getIdToken, hasIdentitySession, isAuth0Ready]);
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const validateCardholderFields = () => {
+    const nextErrors: ActivationFormErrors = {};
 
     if (!normalizedTarjeta) {
-      setSnackbar({
-        message: 'Ingresa el numero de tarjeta.',
-        variant: 'error',
-      });
+      nextErrors.tarjetaNumero = 'Ingresa el numero de tarjeta.';
+    }
+
+    if (!normalizedCurp) {
+      nextErrors.curp = 'Ingresa tu CURP.';
+    } else if (normalizedCurp.length > 18 || !isValidCurp(normalizedCurp, { strict: true })) {
+      nextErrors.curp = 'Revisa tu CURP. Debe coincidir con el formato oficial.';
+    }
+
+    return nextErrors;
+  };
+
+  const validateCredentialsFields = () => {
+    const nextErrors: ActivationFormErrors = {};
+
+    if (!normalizedEmail) {
+      nextErrors.email = 'Ingresa tu correo.';
+    } else if (!isValidEmail(normalizedEmail)) {
+      nextErrors.email = 'Escribe un correo valido.';
+    }
+
+    if (!credentials.password) {
+      nextErrors.password = 'Crea una contrasena.';
+    } else if (!isSecurePassword(credentials.password)) {
+      nextErrors.password = 'Usa al menos 8 caracteres, con mayuscula, minuscula y numero.';
+    }
+
+    if (!credentials.confirmPassword) {
+      nextErrors.confirmPassword = 'Confirma tu contrasena.';
+    } else if (credentials.confirmPassword !== credentials.password) {
+      nextErrors.confirmPassword = 'Las contrasenas no coinciden.';
+    }
+
+    return nextErrors;
+  };
+
+  const applyActivationError = async (
+    error: unknown,
+    options?: { fallbackMessage?: string; clearAccessSession?: boolean },
+  ) => {
+    const errorKind = getActivationErrorKind(error);
+    if (options?.clearAccessSession || isSessionExpiredError(error)) {
+      await logout();
+    }
+
+    const nextState: Record<ActivationErrorKind, ActivationUiState> = {
+      already_linked: 'already_linked',
+      blocked: 'blocked',
+      invalid: 'invalid',
+      session_expired: 'error',
+      error: 'error',
+    };
+
+    if (errorKind === 'invalid' || errorKind === 'blocked' || errorKind === 'error') {
+      setAccessStepStarted(false);
+    }
+
+    setUiState(nextState[errorKind]);
+    setFormErrors({
+      general: getRequestErrorMessage(error, {
+        fallbackMessage: options?.fallbackMessage,
+        useGenericActivationError: true,
+      }),
+    });
+  };
+
+  const handleValidateCardholder = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextErrors = validateCardholderFields();
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors);
       return;
     }
 
-    if (!isCurpValid) {
-      setSnackbar({
-        message: 'Revisa tu CURP. Debe coincidir con el formato oficial.',
-        variant: 'error',
-      });
-      return;
-    }
-
-    setUiState('loading');
-    setSnackbar(null);
+    setUiState('validating');
+    clearFormErrors();
     clearErrorMessage();
 
     try {
@@ -185,156 +196,332 @@ const Activation = () => {
       });
 
       if (!response.can_activate) {
-        throw new Error('No se pudo validar la tarjeta con los datos proporcionados.');
+        throw Object.assign(new Error('No fue posible validar la tarjeta.'), { status: 422 });
       }
 
-      const nextActivationState: ActivationState = {
+      const nextActivationState = {
         tarjetaNumero: normalizedTarjeta,
         verified: true,
       };
 
+      persistPendingActivation(nextActivationState);
       setActivationState(nextActivationState);
       setCurp('');
-      setUiState('verified');
-
-      const signupResult = await signupAfterActivation(normalizedTarjeta);
-      if (signupResult.mode === 'redirect' || !signupResult.idToken) {
-        setUiState('auth_pending');
-        return;
-      }
-
-      await completeActivation(nextActivationState, signupResult.idToken);
+      setCredentials(INITIAL_CREDENTIALS);
+      setAccessStepStarted(false);
+      setUiState('validated');
+      setFormErrors({
+        general: 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contrasena.',
+      });
     } catch (error) {
       clearPendingActivation();
       setActivationState(null);
-      setUiState(isAccountAlreadyLinkedError(error) ? 'already_linked' : 'error');
-      setSnackbar({
-        message: getRequestErrorMessage(error, {
-          fallbackMessage: 'No se pudo validar la tarjeta con los datos proporcionados.',
-          useGenericActivationError: true,
-        }),
-        variant: isAccountAlreadyLinkedError(error) ? 'info' : 'error',
+      await applyActivationError(error, {
+        fallbackMessage: 'No se pudo validar la tarjeta con los datos proporcionados.',
       });
     }
   };
 
-  const handleStartOver = () => {
+  const handleStartSignup = () => {
+    clearErrorMessage();
+    setAccessStepStarted(true);
+    setUiState('validated');
+    setFormErrors({});
+  };
+
+  const handleCompleteActivation = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!activationState?.verified) {
+      return;
+    }
+
+    const nextErrors = validateCredentialsFields();
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors);
+      return;
+    }
+
+    clearErrorMessage();
+    setFormErrors({});
+    setUiState('creating_access');
+
+    try {
+      await signupWithCredentials(normalizedEmail, credentials.password);
+    } catch (signupError) {
+      const message = signupError instanceof Error ? signupError.message : 'No pudimos crear tu acceso.';
+      setUiState('validated');
+      setAccessStepStarted(true);
+      setFormErrors({
+        ...(message.toLowerCase().includes('correo') ? { email: message } : { general: message }),
+      });
+      return;
+    }
+
+    try {
+      const session = await loginWithCredentials(normalizedEmail, credentials.password);
+      setUiState('linking_account');
+
+      await cardholderApi.completeActivation({
+        tarjetaNumero: activationState.tarjetaNumero,
+        auth0IdToken: session.idToken,
+      });
+
+      clearPendingActivation();
+      setActivationState(null);
+      setUiState('success');
+      setFormErrors({
+        general: 'Cuenta vinculada correctamente. Estamos cargando tu perfil.',
+      });
+      await refreshProfile();
+      navigate('/perfil', { replace: true });
+    } catch (error) {
+      clearPendingActivation();
+      setActivationState(null);
+      await applyActivationError(error, {
+        fallbackMessage: 'No pudimos vincular tu cuenta. Intenta de nuevo.',
+        clearAccessSession: true,
+      });
+    }
+  };
+
+  const handleResetActivation = async () => {
     clearPendingActivation();
-    completionStartedRef.current = false;
+    clearErrorMessage();
     setTarjetaNumero('');
     setCurp('');
+    setCredentials(INITIAL_CREDENTIALS);
     setActivationState(null);
+    setAccessStepStarted(false);
     setUiState('idle');
-    setSnackbar(null);
-    clearErrorMessage();
+    clearFormErrors();
+    await logout();
+  };
+
+  const updateCredential = (field: keyof ActivationCredentials, value: string) => {
+    setCredentials((current) => ({
+      ...current,
+      [field]: field === 'email' ? value.toLowerCase() : value,
+    }));
+    setFormErrors((current) => ({
+      ...current,
+      [field]: undefined,
+      general: undefined,
+    }));
   };
 
   const statusText = (() => {
     switch (uiState) {
-      case 'loading':
-        return 'Validando tarjeta y CURP...';
-      case 'verified':
-        return 'Datos validados. Abriendo Auth0 para crear tu acceso.';
-      case 'auth_pending':
-        return 'Estamos esperando que completes el acceso seguro con Auth0.';
-      case 'completing':
-        return 'Vinculando tu cuenta con Tarjeta Joven...';
+      case 'validating':
+        return 'Estamos validando tu tarjeta y tu CURP.';
+      case 'validated':
+        return accessStepStarted
+          ? 'Completa tu correo y contrasena para crear tu acceso.'
+          : 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contrasena.';
+      case 'creating_access':
+        return 'Estamos creando tu acceso.';
+      case 'linking_account':
+        return 'Estamos vinculando tu cuenta con Tarjeta Joven.';
       case 'success':
-        return 'Cuenta vinculada.';
+        return 'Tu cuenta quedo vinculada correctamente.';
       case 'already_linked':
-        return 'Esta tarjeta ya tiene una cuenta asociada.';
+        return 'Esta tarjeta ya tiene una cuenta asociada. Inicia sesion para continuar.';
+      case 'blocked':
+        return 'Esta tarjeta no esta activa. Acude a soporte.';
+      case 'invalid':
+        return 'Los datos no coinciden. Verifica tu numero de tarjeta y CURP.';
       case 'error':
-        return 'Revisa el mensaje y vuelve a intentarlo.';
+        return 'No pudimos completar la activacion. Revisa el mensaje y vuelve a intentarlo.';
       default:
-        return '';
+        return 'Valida tus datos para continuar con tu activacion.';
     }
   })();
 
   return (
     <main className="activation" aria-labelledby="activation-title">
       <section className="activation__card">
-        <p className="activation__step">Activacion segura</p>
+        <p className="activation__step">Activacion guiada</p>
         <h1 id="activation-title">Activa tu Tarjeta Joven</h1>
         <p className="activation__description">
-          Ingresa tu numero de tarjeta y tu CURP para validar tu cuenta y vincularla con Auth0.
+          Sigue estos pasos para validar tu tarjeta, crear tu acceso y entrar a tu perfil digital.
         </p>
 
-        <form className="activation__form" onSubmit={handleSubmit} noValidate>
-          <div className="activation__field">
-            <label htmlFor="tarjetaNumero">Numero de tarjeta</label>
-            <input
-              id="tarjetaNumero"
-              type="text"
-              value={tarjetaNumero}
-              onChange={(event) => setTarjetaNumero(event.target.value.toUpperCase())}
-              placeholder="TJ-000123"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              autoComplete="off"
-              disabled={uiState === 'loading' || uiState === 'auth_pending' || uiState === 'completing'}
-              required
-            />
-          </div>
+        <ol className="activation__stepper" aria-label="Pasos de activacion">
+          {[
+            'Validar datos',
+            'Crear acceso',
+            'Vincular cuenta',
+          ].map((stepLabel, index) => {
+            const stepNumber = index + 1;
+            const isActive = currentStep === stepNumber;
+            const isComplete = currentStep > stepNumber || (uiState === 'success' && stepNumber === 3);
 
-          <div className="activation__field">
-            <label htmlFor="curp">CURP</label>
-            <input
-              id="curp"
-              type="text"
-              value={curp}
-              onChange={(event) => setCurp(event.target.value.toUpperCase())}
-              placeholder="INGR000000HDFXXX00"
-              maxLength={18}
-              pattern="[A-Z0-9]{18}"
-              autoComplete="off"
-              autoCapitalize="characters"
-              autoCorrect="off"
-              disabled={uiState === 'loading' || uiState === 'auth_pending' || uiState === 'completing'}
-              required
-            />
-            <p className="activation__hint">La CURP se usa solo durante esta validacion y no se almacena.</p>
-            {curp && !isCurpValid && (
-              <p className="activation__error">Revisa tu CURP. Debe coincidir con el formato oficial.</p>
-            )}
-          </div>
+            return (
+              <li
+                key={stepLabel}
+                className={`activation__stepper-item${isActive ? ' activation__stepper-item--active' : ''}${
+                  isComplete ? ' activation__stepper-item--complete' : ''
+                }`}
+              >
+                <span className="activation__stepper-index" aria-hidden="true">
+                  {stepNumber}
+                </span>
+                <span>{stepLabel}</span>
+              </li>
+            );
+          })}
+        </ol>
 
-          <button type="submit" className="activation__submit" disabled={!canValidate}>
-            {uiState === 'loading' ? 'Validando...' : 'Validar datos'}
-          </button>
-        </form>
+        <div className={`activation__feedback activation__feedback--${uiState}`} role="status" aria-live="polite">
+          <p>{statusText}</p>
+          {formErrors.general && formErrors.general !== statusText && (
+            <p className="activation__feedback-detail">{formErrors.general}</p>
+          )}
+        </div>
 
-        {activationState?.verified && (
-          <div className="activation__summary" aria-live="polite">
-            <p>
-              <strong>Tarjeta validada:</strong> {activationState.tarjetaNumero}
-            </p>
-          </div>
+        {!activationState?.verified && (
+          <form className="activation__form" onSubmit={handleValidateCardholder} noValidate>
+            <div className="activation__field">
+              <label htmlFor="tarjetaNumero">Numero de tarjeta</label>
+              <input
+                id="tarjetaNumero"
+                type="text"
+                value={tarjetaNumero}
+                onChange={(event) => {
+                  setTarjetaNumero(event.target.value.toUpperCase());
+                  if (formErrors.tarjetaNumero) {
+                    setFormErrors((current) => ({ ...current, tarjetaNumero: undefined }));
+                  }
+                }}
+                placeholder="TJ-000123"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                disabled={isBusy}
+                required
+              />
+              {formErrors.tarjetaNumero && <p className="activation__error">{formErrors.tarjetaNumero}</p>}
+            </div>
+
+            <div className="activation__field">
+              <label htmlFor="curp">CURP</label>
+              <input
+                id="curp"
+                type="text"
+                value={curp}
+                onChange={(event) => {
+                  setCurp(event.target.value.toUpperCase());
+                  if (formErrors.curp) {
+                    setFormErrors((current) => ({ ...current, curp: undefined }));
+                  }
+                }}
+                placeholder="INGR000000HDFXXX00"
+                maxLength={18}
+                pattern="[A-Z0-9]{18}"
+                autoComplete="off"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                disabled={isBusy}
+                required
+              />
+              <p className="activation__hint">La CURP solo se usa para validar tu tarjeta y no se almacena.</p>
+              {formErrors.curp && <p className="activation__error">{formErrors.curp}</p>}
+            </div>
+
+            <button type="submit" className="activation__submit" disabled={isBusy}>
+              {uiState === 'validating' ? 'Validando...' : 'Validar datos'}
+            </button>
+          </form>
         )}
 
-        {statusText && (
-          <p className="activation__status" role="status" aria-live="polite">
-            {statusText}
-          </p>
+        {activationState?.verified && (
+          <>
+            <div className="activation__summary" aria-live="polite">
+              <p>
+                <strong>Tarjeta validada:</strong> {activationState.tarjetaNumero}
+              </p>
+              <p>Ya puedes crear tu acceso con correo y contrasena.</p>
+            </div>
+
+            {!accessStepStarted && uiState === 'validated' && (
+              <button type="button" className="activation__submit" onClick={handleStartSignup}>
+                Crear mi acceso
+              </button>
+            )}
+
+            {accessStepStarted && (
+              <form className="activation__form" onSubmit={handleCompleteActivation} noValidate>
+                <div className="activation__field">
+                  <label htmlFor="email">Correo</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={credentials.email}
+                    onChange={(event) => updateCredential('email', event.target.value)}
+                    placeholder="tu_correo@ejemplo.com"
+                    autoComplete="email"
+                    disabled={isBusy}
+                    required
+                  />
+                  {formErrors.email && <p className="activation__error">{formErrors.email}</p>}
+                </div>
+
+                <div className="activation__field">
+                  <label htmlFor="password">Contrasena</label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={credentials.password}
+                    onChange={(event) => updateCredential('password', event.target.value)}
+                    placeholder="Crea una contrasena segura"
+                    autoComplete="new-password"
+                    disabled={isBusy}
+                    required
+                  />
+                  <p className="activation__hint">
+                    Usa minimo 8 caracteres, con mayuscula, minuscula y numero.
+                  </p>
+                  {formErrors.password && <p className="activation__error">{formErrors.password}</p>}
+                </div>
+
+                <div className="activation__field">
+                  <label htmlFor="confirmPassword">Confirmar contrasena</label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={credentials.confirmPassword}
+                    onChange={(event) => updateCredential('confirmPassword', event.target.value)}
+                    placeholder="Repite tu contrasena"
+                    autoComplete="new-password"
+                    disabled={isBusy}
+                    required
+                  />
+                  {formErrors.confirmPassword && (
+                    <p className="activation__error">{formErrors.confirmPassword}</p>
+                  )}
+                </div>
+
+                <button type="submit" className="activation__submit" disabled={isBusy}>
+                  {uiState === 'creating_access'
+                    ? 'Creando acceso...'
+                    : uiState === 'linking_account'
+                    ? 'Vinculando cuenta...'
+                    : 'Crear mi acceso'}
+                </button>
+              </form>
+            )}
+          </>
         )}
 
         <div className="activation__actions">
           <Link to="/login">Ir a login</Link>
           <Link to="/migrar-cuenta">Ya tenia una cuenta local</Link>
-          {(uiState === 'error' || uiState === 'already_linked' || uiState === 'auth_pending') && (
-            <button type="button" className="activation__reset" onClick={handleStartOver}>
+          {RECOVERABLE_STATES.includes(uiState) && (
+            <button type="button" className="activation__reset" onClick={() => void handleResetActivation()}>
               Reiniciar activacion
             </button>
           )}
         </div>
       </section>
-
-      {snackbar && (
-        <Snackbar
-          message={snackbar.message}
-          variant={snackbar.variant}
-          onClose={() => setSnackbar(null)}
-        />
-      )}
     </main>
   );
 };

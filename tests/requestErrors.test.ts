@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { getRequestErrorMessage, isAccountAlreadyLinkedError } from '../src/lib/requestErrors';
+import {
+  getActivationErrorKind,
+  getRequestErrorMessage,
+  isAccountAlreadyLinkedError,
+} from '../src/lib/requestErrors';
 
 const createApiError = (status: number, message: string) =>
   Object.assign(new Error(message), {
@@ -14,11 +18,19 @@ describe('requestErrors', () => {
       getRequestErrorMessage(error, {
         useGenericActivationError: true,
       }),
-    ).toBe('No se pudo validar la tarjeta con los datos proporcionados.');
+    ).toBe('Los datos no coinciden. Verifica tu numero de tarjeta y CURP.');
   });
 
   it('identifica cuentas ya vinculadas', () => {
     expect(isAccountAlreadyLinkedError(createApiError(409, 'Duplicado'))).toBe(true);
     expect(isAccountAlreadyLinkedError(createApiError(500, 'Error'))).toBe(false);
+  });
+
+  it('mapea estados de bloqueo e invalidez para activacion', () => {
+    expect(getActivationErrorKind(createApiError(403, 'Bloqueado'))).toBe('blocked');
+    expect(getActivationErrorKind(createApiError(422, 'Invalido'))).toBe('invalid');
+    expect(getRequestErrorMessage(createApiError(403, 'Bloqueado'))).toBe(
+      'Esta tarjeta no esta activa. Acude a soporte.',
+    );
   });
 });

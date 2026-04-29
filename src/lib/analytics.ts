@@ -26,7 +26,19 @@ let queue: StoredEvent[] = [];
 let isFlushing = false;
 let listenersRegistered = false;
 
-const SENSITIVE_KEYS = new Set(['curp', 'auth0_id_token', 'auth0IdToken', 'token', 'authorization']);
+const SENSITIVE_KEYS = new Set([
+  'curp',
+  'email',
+  'password',
+  'confirmPassword',
+  'auth0_id_token',
+  'auth0IdToken',
+  'id_token',
+  'access_token',
+  'refresh_token',
+  'token',
+  'authorization',
+]);
 
 const sanitizePayload = (payload?: AnalyticsPayload) => {
   if (!payload) {

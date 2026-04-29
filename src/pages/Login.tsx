@@ -1,13 +1,23 @@
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
+import { isValidEmail } from '../lib/validators';
 import './Login.css';
 
+type LoginErrors = {
+  email?: string;
+  password?: string;
+  general?: string;
+};
+
 const Login = () => {
-  const { login, status, errorMessage, clearErrorMessage } = useAuth();
+  const { loginWithCredentials, refreshProfile, status, errorMessage, clearErrorMessage, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [statusMessage, setStatusMessage] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<LoginErrors>({});
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -24,51 +34,111 @@ const Login = () => {
     }
   }, [location.pathname, navigate, status]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextErrors: LoginErrors = {};
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      nextErrors.email = 'Ingresa tu correo.';
+    } else if (!isValidEmail(normalizedEmail)) {
+      nextErrors.email = 'Escribe un correo valido.';
+    }
+
+    if (!password) {
+      nextErrors.password = 'Ingresa tu contrasena.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFormErrors(nextErrors);
+      return;
+    }
+
     clearErrorMessage();
-    setStatusMessage('');
+    setFormErrors({});
+    setIsSubmitting(true);
 
     try {
-      const result = await login();
-      if (result.mode === 'redirect') {
-        setStatusMessage('Abriendo el acceso seguro de Auth0...');
-        return;
+      await loginWithCredentials(normalizedEmail, password);
+      const profile = await refreshProfile();
+      if (profile) {
+        navigate('/perfil', { replace: true });
       }
-
-      setStatusMessage('Acceso validado. Estamos cargando tu perfil.');
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : 'No pudimos iniciar sesion.');
+      setFormErrors({
+        general: error instanceof Error ? error.message : 'No pudimos iniciar sesion.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <main className="login" aria-labelledby="login-title">
       <section className="login__card" aria-labelledby="login-title">
-        <h1 id="login-title">Inicia sesion con Auth0</h1>
+        <p className="login__eyebrow">Acceso digital</p>
+        <h1 id="login-title">Inicia sesion</h1>
         <p className="login__hint">
-          Tu acceso ahora se valida con Auth0. Usa esta opcion si tu tarjeta ya esta vinculada a una
-          cuenta segura.
+          Usa el correo y la contrasena con los que creaste tu acceso para entrar a tu perfil.
         </p>
 
-        <div className="login__form">
-          <button type="button" className="login__submit" onClick={handleLogin} disabled={status === 'loading'}>
-            {status === 'loading' ? 'Validando...' : 'Continuar con Auth0'}
+        <form className="login__form" onSubmit={handleLogin} noValidate>
+          <div className={`login__field${formErrors.email ? ' is-invalid' : ''}`}>
+            <label htmlFor="loginEmail">Correo</label>
+            <input
+              id="loginEmail"
+              type="email"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value.toLowerCase());
+                setFormErrors((current) => ({ ...current, email: undefined, general: undefined }));
+              }}
+              placeholder="tu_correo@ejemplo.com"
+              autoComplete="email"
+              disabled={!isAuthReady || isSubmitting || status === 'loading'}
+              required
+            />
+            {formErrors.email && <p className="login__error">{formErrors.email}</p>}
+          </div>
+
+          <div className={`login__field${formErrors.password ? ' is-invalid' : ''}`}>
+            <label htmlFor="loginPassword">Contrasena</label>
+            <input
+              id="loginPassword"
+              type="password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setFormErrors((current) => ({ ...current, password: undefined, general: undefined }));
+              }}
+              placeholder="Tu contrasena"
+              autoComplete="current-password"
+              disabled={!isAuthReady || isSubmitting || status === 'loading'}
+              required
+            />
+            {formErrors.password && <p className="login__error">{formErrors.password}</p>}
+          </div>
+
+          <button type="submit" className="login__submit" disabled={!isAuthReady || isSubmitting || status === 'loading'}>
+            {isSubmitting || status === 'loading' ? 'Validando...' : 'Entrar a mi perfil'}
           </button>
+
           <Link to="/activar" className="login__secondary">
             Activar mi tarjeta
           </Link>
           <Link to="/migrar-cuenta" className="login__secondary">
-            Necesito migrar mi cuenta
+            Necesito ayuda con mi acceso
           </Link>
+
           <p className="login__status" role="status" aria-live="polite">
-            {errorMessage || statusMessage}
+            {formErrors.general || errorMessage}
           </p>
-        </div>
+        </form>
       </section>
 
       <footer className="login__footer">
-        <p>¿Aun no vinculas tu tarjeta?</p>
-        <Link to="/activar">Activarla ahora</Link>
+        <p>Aun no activas tu tarjeta?</p>
+        <Link to="/activar">Comenzar activacion</Link>
       </footer>
 
       <div className="login__brand" aria-hidden="true">

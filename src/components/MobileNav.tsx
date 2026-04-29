@@ -12,7 +12,7 @@ const items = [
 const MobileNav = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const hiddenRoutes = ['/login', '/registro', '/activar', '/migrar-cuenta', '/auth/callback'];
+  const hiddenRoutes = ['/login', '/registro', '/activar', '/activation', '/migrar-cuenta', '/auth/callback'];
 
   if (!isAuthenticated || hiddenRoutes.includes(location.pathname)) {
     return null;
