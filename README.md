@@ -80,6 +80,62 @@ En CI, si faltan fixtures para un grupo, el smoke test falla.
 - Los datos sensibles se excluyen de analytics y logs.
 - La PWA no cachea `/me` ni endpoints autenticados de sesion.
 
+## Despliegue en Render
+
+Este repo ya incluye `render.yaml` para desplegar como `Static Site` en la capa gratuita y reenviar `/api/v1/*` a Railway:
+
+- frontend: Render `Static Site`
+- backend: `https://apitj-production.up.railway.app/`
+- API pública del frontend: `/api/v1`
+
+### Configuracion recomendada
+
+- En Render crea un servicio tipo `Static Site`.
+- Conecta este repositorio.
+- Si Render detecta el `render.yaml`, acepta esa configuracion.
+- Si lo configuras manualmente, usa:
+
+```txt
+Build Command: npm run build
+Publish Directory: dist
+```
+
+- En variables de entorno usa:
+
+```env
+VITE_API_BASE_URL=/api/v1
+```
+
+### Rewrites necesarias
+
+Si no tomas la configuracion desde `render.yaml`, agrega estas reglas en Render Dashboard:
+
+```txt
+/api/v1/*   ->   https://apitj-production.up.railway.app/api/v1/*   (Rewrite)
+/*          ->   /index.html                                        (Rewrite)
+```
+
+La primera mantiene el frontend en mismo origen para que login, refresh y cookies funcionen mejor. La segunda evita errores `404` al recargar rutas de React Router.
+
+### Pasos de despliegue
+
+1. Sube estos cambios a tu repositorio.
+2. En Render entra a `New > Static Site`.
+3. Selecciona el repo y la rama que quieres publicar.
+4. Usa el `render.yaml` del repo o captura manualmente los valores anteriores.
+5. Confirma que la variable `VITE_API_BASE_URL` quede en `/api/v1`.
+6. Ejecuta el primer deploy.
+7. Abre la URL `onrender.com` generada por Render.
+8. Prueba login, refresco de sesion y las rutas internas de la SPA.
+
+### Validacion importante con Railway
+
+Si el backend en Railway emite cookies para refresh/login, evita fijar el atributo `Domain` al dominio de Railway. Lo ideal es dejar `Domain` vacio y usar cookies `Secure` para que la respuesta proxied por Render pueda establecer la cookie sobre el dominio del frontend.
+
+### Nota sobre Vercel
+
+No habilites `VITE_ENABLE_SPEED_INSIGHTS` en Render; ese script solo debe cargarse en Vercel.
+
 ## Despliegue en Netlify
 
 - Este repo incluye `netlify.toml` para reenviar `/api/v1/*` al backend y mantener el frontend en mismo origen.
