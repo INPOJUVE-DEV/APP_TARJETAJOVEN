@@ -5,29 +5,25 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import { env } from '../config/env';
 import { authApi, UserProfile } from './api/auth';
-import { clearPendingActivation } from './authFlow';
-import { isApiError } from './apiClient';
 import {
-  getEmbeddedAuthErrorMessage,
-  loginWithEmbeddedCredentials,
-  refreshEmbeddedAuthSession,
-  signupWithEmbeddedCredentials,
-} from './embeddedAuth';
-import {
-  clearStoredAuthSession,
-  EmbeddedAuthSession,
-  getStoredAuthSession,
-  persistAuthSession,
-  shouldRefreshAuthSession,
+  clearAuthSession,
+  getAuthSession,
+  setAuthSession,
+  subscribeAuthSession,
 } from './authSession';
-import { getRequestErrorMessage, isUnlinkedProfileError } from './requestErrors';
+import { refreshApiSession, isApiError } from './apiClient';
+import {
+  cardholderApi,
+  CompleteActivationRequest,
+  VerifyActivationRequest,
+  VerifyActivationResponse,
+} from './api/cardholders';
+import { getRequestErrorMessage, isSessionExpiredError } from './requestErrors';
 
-export type AppSessionStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'unlinked' | 'error';
+export type AppSessionStatus = 'loading' | 'authenticated' | 'unauthenticated' | 'error';
 
 export type AppSession = {
   isAuthenticated: boolean;
@@ -38,225 +34,210 @@ export type AppSession = {
 type AuthContextValue = AppSession & {
   errorMessage: string | null;
   isAuthReady: boolean;
-  loginWithCredentials: (email: string, password: string) => Promise<EmbeddedAuthSession>;
-  signupWithCredentials: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<UserProfile | null>;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
   refreshProfile: () => Promise<UserProfile | null>;
-  getAccessToken: () => Promise<string | null>;
-  getIdToken: () => Promise<string | null>;
+  forgotPassword: (email: string) => Promise<string>;
+  resetPassword: (token: string, password: string, passwordConfirmation: string) => Promise<string>;
+  verifyActivation: (payload: VerifyActivationRequest) => Promise<VerifyActivationResponse>;
+  completeActivation: (payload: CompleteActivationRequest) => Promise<UserProfile | null>;
   clearErrorMessage: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const authIsConfigured =
-  env.auth0Domain.length > 0 &&
-  env.auth0ClientId.length > 0 &&
-  env.auth0Audience.length > 0 &&
-  env.auth0DbConnection.length > 0;
+const LOGIN_ERROR_MESSAGE = 'Correo o contraseña incorrectos.';
+const SESSION_ERROR_MESSAGE = 'No pudimos recuperar tu sesión. Intenta de nuevo.';
 
-const disabledAuthContext: AuthContextValue = {
-  isAuthenticated: false,
-  profile: null,
-  status: 'unauthenticated',
-  errorMessage: 'El acceso seguro no esta configurado en este entorno.',
-  isAuthReady: true,
-  loginWithCredentials: async () => {
-    throw new Error('El acceso seguro no esta configurado en este entorno.');
-  },
-  signupWithCredentials: async () => {
-    throw new Error('El acceso seguro no esta configurado en este entorno.');
-  },
-  logout: async () => {},
-  refreshProfile: async () => null,
-  getAccessToken: async () => null,
-  getIdToken: async () => null,
-  clearErrorMessage: () => {},
-};
+const isInvalidLoginError = (error: unknown) =>
+  isApiError(error) && (error.status === 401 || error.status === 422);
 
 const InnerAuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [status, setStatus] = useState<AppSessionStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [session, setSession] = useState<EmbeddedAuthSession | null>(() => getStoredAuthSession());
-  const sessionRef = useRef<EmbeddedAuthSession | null>(session);
 
-  const storeSession = useCallback((nextSession: EmbeddedAuthSession | null) => {
-    sessionRef.current = nextSession;
-    setSession(nextSession);
-    persistAuthSession(nextSession);
-  }, []);
-
-  const clearSession = useCallback(() => {
-    storeSession(null);
-    clearStoredAuthSession();
-  }, [storeSession]);
-
-  const ensureSession = useCallback(
-    async (options?: { forceRefresh?: boolean; suppressErrors?: boolean }) => {
-      const currentSession = sessionRef.current ?? getStoredAuthSession();
-      if (!currentSession) {
-        clearSession();
-        return null;
-      }
-
-      if (!options?.forceRefresh && !shouldRefreshAuthSession(currentSession)) {
-        if (sessionRef.current !== currentSession) {
-          storeSession(currentSession);
-        }
-
-        return currentSession;
-      }
-
-      if (!currentSession.refreshToken) {
-        clearSession();
-        if (!options?.suppressErrors) {
-          setErrorMessage('Tu acceso expiro. Inicia sesion nuevamente.');
-        }
-        return null;
-      }
-
-      try {
-        const refreshedSession = await refreshEmbeddedAuthSession(
-          currentSession.refreshToken,
-          currentSession.idToken,
-          currentSession.refreshToken,
-        );
-        storeSession(refreshedSession);
-        setErrorMessage(null);
-        return refreshedSession;
-      } catch (refreshError) {
-        clearSession();
-        if (!options?.suppressErrors) {
-          setErrorMessage(getEmbeddedAuthErrorMessage(refreshError, 'refresh'));
-        }
-        return null;
-      }
-    },
-    [clearSession, storeSession],
-  );
-
-  const loadProfile = useCallback(
-    async (currentSession: EmbeddedAuthSession, options?: { allowRetry?: boolean }) => {
-      try {
-        const nextProfile = await authApi.profile(currentSession.accessToken);
-        setProfile(nextProfile);
-        setStatus('authenticated');
-        setErrorMessage(null);
-        return nextProfile;
-      } catch (nextError) {
-        if (isApiError(nextError) && nextError.status === 401 && options?.allowRetry !== false) {
-          const refreshedSession = await ensureSession({ forceRefresh: true, suppressErrors: true });
-          if (refreshedSession) {
-            return loadProfile(refreshedSession, { allowRetry: false });
-          }
-
-          setProfile(null);
-          setStatus('unauthenticated');
-          setErrorMessage('Tu acceso expiro. Inicia sesion nuevamente.');
-          return null;
-        }
-
-        if (isApiError(nextError) && isUnlinkedProfileError(nextError)) {
-          setProfile(null);
-          setStatus('unlinked');
-          setErrorMessage(null);
-          return null;
-        }
-
-        const message = getRequestErrorMessage(nextError, {
-          fallbackMessage: 'No pudimos obtener tu informacion de perfil.',
-        });
+  const loadProfile = useCallback(async () => {
+    try {
+      const nextProfile = await authApi.profile();
+      setProfile(nextProfile);
+      setStatus('authenticated');
+      setErrorMessage(null);
+      return nextProfile;
+    } catch (error) {
+      if (isSessionExpiredError(error)) {
+        clearAuthSession();
         setProfile(null);
-        setStatus('error');
-        setErrorMessage(message);
+        setStatus('unauthenticated');
+        setErrorMessage(null);
         return null;
       }
-    },
-    [ensureSession],
-  );
 
-  const refreshProfile = useCallback(async () => {
-    setStatus('loading');
-    const activeSession = await ensureSession();
-    if (!activeSession) {
       setProfile(null);
-      setStatus('unauthenticated');
+      setStatus('error');
+      setErrorMessage(
+        getRequestErrorMessage(error, {
+          fallbackMessage: 'No pudimos obtener tu información de perfil.',
+        }),
+      );
       return null;
     }
+  }, []);
 
-    return loadProfile(activeSession, { allowRetry: true });
-  }, [ensureSession, loadProfile]);
+  useEffect(() => {
+    const unsubscribe = subscribeAuthSession((session) => {
+      if (!session.accessToken) {
+        setProfile(null);
+        setStatus('unauthenticated');
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
 
-    void (async () => {
-      const storedSession = await ensureSession({ suppressErrors: true });
-      if (!isMounted) {
-        return;
-      }
+    const bootstrapSession = async () => {
+      setStatus('loading');
+      setErrorMessage(null);
 
-      if (!storedSession) {
+      try {
+        let accessToken = getAuthSession().accessToken;
+
+        if (!accessToken) {
+          accessToken = await refreshApiSession();
+        }
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!accessToken) {
+          setProfile(null);
+          setStatus('unauthenticated');
+          return;
+        }
+
+        await loadProfile();
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+
         setProfile(null);
-        setStatus('unauthenticated');
-        setIsAuthReady(true);
-        return;
+        setStatus('error');
+        setErrorMessage(
+          getRequestErrorMessage(error, {
+            fallbackMessage: SESSION_ERROR_MESSAGE,
+          }),
+        );
+      } finally {
+        if (isMounted) {
+          setIsAuthReady(true);
+        }
       }
+    };
 
-      await loadProfile(storedSession, { allowRetry: true });
-      if (isMounted) {
-        setIsAuthReady(true);
-      }
-    })();
+    void bootstrapSession();
 
     return () => {
       isMounted = false;
     };
-  }, [ensureSession, loadProfile]);
+  }, [loadProfile]);
 
-  const loginWithCredentials = useCallback(
-    async (email: string, password: string) => {
-      setErrorMessage(null);
+  const login = useCallback(
+    async (username: string, password: string) => {
       setStatus('loading');
+      setErrorMessage(null);
 
       try {
-        const nextSession = await loginWithEmbeddedCredentials(email, password);
-        storeSession(nextSession);
-        setProfile(null);
-        return nextSession;
-      } catch (loginError) {
-        clearSession();
+        const session = await authApi.login(username, password);
+        setAuthSession({
+          accessToken: session.accessToken,
+          expiresIn: session.expiresIn,
+          user: session.user,
+        });
+
+        return await loadProfile();
+      } catch (error) {
+        clearAuthSession();
         setProfile(null);
         setStatus('unauthenticated');
-        const message = getEmbeddedAuthErrorMessage(loginError, 'login');
-        setErrorMessage(message);
-        throw new Error(message);
+        setErrorMessage(
+          isInvalidLoginError(error)
+            ? LOGIN_ERROR_MESSAGE
+            : getRequestErrorMessage(error, {
+                fallbackMessage: 'No pudimos iniciar sesión. Intenta de nuevo.',
+              }),
+        );
+        throw error;
       }
     },
-    [clearSession, storeSession],
+    [loadProfile],
   );
 
-  const signupWithCredentials = useCallback(async (email: string, password: string) => {
-    setErrorMessage(null);
-
+  const logout = useCallback(async () => {
     try {
-      await signupWithEmbeddedCredentials(email, password);
-    } catch (signupError) {
-      const message = getEmbeddedAuthErrorMessage(signupError, 'signup');
-      setErrorMessage(message);
-      throw new Error(message);
+      await authApi.logout();
+    } catch {
+      // El frontend debe limpiar la sesion aunque el backend falle al limpiar la cookie.
+    } finally {
+      clearAuthSession();
+      setProfile(null);
+      setStatus('unauthenticated');
+      setErrorMessage(null);
     }
   }, []);
 
-  const logout = useCallback(async () => {
-    clearPendingActivation();
-    clearSession();
+  const refreshSession = useCallback(async () => {
+    const refreshedToken = await refreshApiSession();
+
+    if (!refreshedToken) {
+      setProfile(null);
+      setStatus('unauthenticated');
+      return false;
+    }
+
+    const nextProfile = await loadProfile();
+    return nextProfile !== null;
+  }, [loadProfile]);
+
+  const forgotPassword = useCallback(async (email: string) => {
+    const response = await authApi.forgotPassword(email);
+    setErrorMessage(null);
+    return response.message;
+  }, []);
+
+  const resetPassword = useCallback(async (token: string, password: string, passwordConfirmation: string) => {
+    const response = await authApi.resetPassword(token, password, passwordConfirmation);
+    clearAuthSession();
     setProfile(null);
     setStatus('unauthenticated');
     setErrorMessage(null);
-  }, [clearSession]);
+    return response.message;
+  }, []);
+
+  const verifyActivation = useCallback((payload: VerifyActivationRequest) => {
+    setErrorMessage(null);
+    return cardholderApi.verifyActivation(payload);
+  }, []);
+
+  const completeActivation = useCallback(
+    async (payload: CompleteActivationRequest) => {
+      const response = await cardholderApi.completeActivation(payload);
+      setAuthSession({
+        accessToken: response.accessToken,
+        expiresIn: response.expiresIn,
+        user: response.user,
+      });
+
+      return await loadProfile();
+    },
+    [loadProfile],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -265,43 +246,38 @@ const InnerAuthProvider = ({ children }: { children: ReactNode }) => {
       status,
       errorMessage,
       isAuthReady,
-      loginWithCredentials,
-      signupWithCredentials,
+      login,
       logout,
-      refreshProfile,
-      getAccessToken: async () => {
-        const activeSession = await ensureSession();
-        return activeSession?.accessToken ?? null;
-      },
-      getIdToken: async () => {
-        const activeSession = await ensureSession();
-        return activeSession?.idToken ?? null;
-      },
+      refreshSession,
+      refreshProfile: loadProfile,
+      forgotPassword,
+      resetPassword,
+      verifyActivation,
+      completeActivation,
       clearErrorMessage: () => setErrorMessage(null),
     }),
     [
-      ensureSession,
+      completeActivation,
       errorMessage,
+      forgotPassword,
       isAuthReady,
-      loginWithCredentials,
+      loadProfile,
+      login,
       logout,
       profile,
-      refreshProfile,
-      signupWithCredentials,
+      refreshSession,
+      resetPassword,
       status,
+      verifyActivation,
     ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const AppAuthProvider = ({ children }: { children: ReactNode }) => {
-  if (!authIsConfigured) {
-    return <AuthContext.Provider value={disabledAuthContext}>{children}</AuthContext.Provider>;
-  }
-
-  return <InnerAuthProvider>{children}</InnerAuthProvider>;
-};
+export const AppAuthProvider = ({ children }: { children: ReactNode }) => (
+  <InnerAuthProvider>{children}</InnerAuthProvider>
+);
 
 export const useAppAuth = () => {
   const context = useContext(AuthContext);

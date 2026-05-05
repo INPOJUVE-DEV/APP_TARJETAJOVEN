@@ -1,81 +1,61 @@
-export interface EmbeddedAuthSession {
-  accessToken: string;
-  idToken: string;
-  refreshToken: string | null;
-  tokenType: string;
-  scope: string;
-  expiresAt: number;
+export interface AuthSessionUser {
+  id: number | string;
+  email?: string | null;
+  role?: string | null;
+  status?: string | null;
+  cardholderSyncId?: number | string | null;
+  tarjetaNumero?: string | null;
+  nombreCompleto?: string | null;
 }
 
-const AUTH_SESSION_STORAGE_KEY = 'tj.auth.embedded-session';
-const REFRESH_BUFFER_MS = 60_000;
+export interface AuthSessionState {
+  accessToken: string | null;
+  expiresIn: number | null;
+  user: AuthSessionUser | null;
+}
 
-const isBrowser = typeof window !== 'undefined';
+type SessionListener = (session: AuthSessionState) => void;
 
-const isValidSession = (value: unknown): value is EmbeddedAuthSession => {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
+const listeners = new Set<SessionListener>();
 
-  const candidate = value as EmbeddedAuthSession;
-  return (
-    typeof candidate.accessToken === 'string' &&
-    candidate.accessToken.length > 0 &&
-    typeof candidate.idToken === 'string' &&
-    candidate.idToken.length > 0 &&
-    (typeof candidate.refreshToken === 'string' || candidate.refreshToken === null) &&
-    typeof candidate.tokenType === 'string' &&
-    candidate.tokenType.length > 0 &&
-    typeof candidate.scope === 'string' &&
-    typeof candidate.expiresAt === 'number' &&
-    Number.isFinite(candidate.expiresAt)
-  );
+const INITIAL_SESSION: AuthSessionState = {
+  accessToken: null,
+  expiresIn: null,
+  user: null,
 };
 
-export const getStoredAuthSession = (): EmbeddedAuthSession | null => {
-  if (!isBrowser) {
-    return null;
-  }
+let authSession = { ...INITIAL_SESSION };
 
-  const rawValue = window.localStorage.getItem(AUTH_SESSION_STORAGE_KEY);
-  if (!rawValue) {
-    return null;
+const notifyListeners = () => {
+  for (const listener of listeners) {
+    listener(getAuthSession());
   }
-
-  try {
-    const parsed = JSON.parse(rawValue) as unknown;
-    if (isValidSession(parsed)) {
-      return parsed;
-    }
-  } catch {
-    window.localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
-  }
-
-  return null;
 };
 
-export const persistAuthSession = (session: EmbeddedAuthSession | null) => {
-  if (!isBrowser) {
-    return;
-  }
+export const getAuthSession = (): AuthSessionState => ({
+  accessToken: authSession.accessToken,
+  expiresIn: authSession.expiresIn,
+  user: authSession.user ? { ...authSession.user } : null,
+});
 
-  if (!session) {
-    window.localStorage.removeItem(AUTH_SESSION_STORAGE_KEY);
-    return;
-  }
-
-  window.localStorage.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+export const setAuthSession = (session: Partial<AuthSessionState>) => {
+  authSession = {
+    accessToken: session.accessToken ?? authSession.accessToken,
+    expiresIn: session.expiresIn ?? authSession.expiresIn,
+    user: session.user ?? authSession.user,
+  };
+  notifyListeners();
 };
 
-export const clearStoredAuthSession = () => {
-  persistAuthSession(null);
+export const clearAuthSession = () => {
+  authSession = { ...INITIAL_SESSION };
+  notifyListeners();
 };
 
-export const shouldRefreshAuthSession = (
-  session: EmbeddedAuthSession,
-  options?: { now?: number; bufferMs?: number },
-) => {
-  const now = options?.now ?? Date.now();
-  const bufferMs = options?.bufferMs ?? REFRESH_BUFFER_MS;
-  return session.expiresAt - bufferMs <= now;
+export const subscribeAuthSession = (listener: SessionListener) => {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
 };

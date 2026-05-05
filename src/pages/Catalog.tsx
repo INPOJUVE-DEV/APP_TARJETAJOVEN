@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, LayoutGroup } from 'framer-motion';
 import BenefitCard from '../components/BenefitCard';
+import BenefitHighlightModal from '../components/BenefitHighlightModal';
 import FilterChips from '../components/FilterChips';
 import MerchantModal from '../components/MerchantModal';
 import {
-  Benefit,
+  useLazyGetCatalogHighlightsQuery,
   useLazyGetCatalogQuery,
 } from '../features/catalog/catalogSlice';
+import {
+  BenefitHighlight,
+  getBenefitHighlightSince,
+  loadHighlightMarker,
+  loadSessionHighlightMarker,
+  saveBenefitHighlightSeen,
+  shouldOpenBenefitHighlight,
+} from '../features/catalog/catalogHighlights';
+import { Benefit } from '../features/catalog/catalogTypes';
 import { track } from '../lib/analytics';
 
 const skeletonArray = Array.from({ length: 6 }, (_, index) => index);
@@ -36,9 +46,22 @@ const Catalog = () => {
   const [municipalities, setMunicipalities] = useState<string[]>([]);
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | undefined>();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [highlightBenefit, setHighlightBenefit] = useState<BenefitHighlight | undefined>();
+  const [isHighlightModalOpen, setIsHighlightModalOpen] = useState(false);
   const [isAwaiting, setIsAwaiting] = useState(true);
 
   const [fetchCatalog, { data, isLoading, isFetching, isError }] = useLazyGetCatalogQuery();
+  const [fetchHighlights, { data: highlightsData }] = useLazyGetCatalogHighlightsQuery();
+
+  useEffect(() => {
+    const persistedSince =
+      typeof window !== 'undefined' ? getBenefitHighlightSince(window.localStorage) : undefined;
+
+    fetchHighlights({
+      limit: 1,
+      since: persistedSince,
+    });
+  }, [fetchHighlights]);
 
   useEffect(() => {
     setIsAwaiting(true);
@@ -81,6 +104,29 @@ const Catalog = () => {
       setIsAwaiting(false);
     }
   }, [isError, isFetching]);
+
+  useEffect(() => {
+    const candidate = highlightsData?.items[0];
+    if (!candidate || typeof window === 'undefined') {
+      return;
+    }
+
+    const persistedMarker = loadHighlightMarker(window.localStorage);
+    const sessionMarker = loadSessionHighlightMarker(window.sessionStorage);
+
+    if (!shouldOpenBenefitHighlight(candidate, persistedMarker, sessionMarker)) {
+      return;
+    }
+
+    setHighlightBenefit(candidate);
+    setIsHighlightModalOpen(true);
+    track('open_new_benefit_modal', {
+      origin: 'catalog',
+      id: candidate.benefit.id,
+      name: candidate.benefit.name,
+      publishedAt: candidate.publishedAt,
+    });
+  }, [highlightsData]);
 
   const activeFilterCount = selectedCategories.length + selectedMunicipalities.length;
   const totalBenefits = data?.meta?.total ?? benefits.length;
@@ -179,6 +225,36 @@ const Catalog = () => {
     setSelectedBenefit(undefined);
   };
 
+  const markHighlightAsSeen = (highlight: BenefitHighlight | undefined) => {
+    if (!highlight || typeof window === 'undefined') {
+      return;
+    }
+
+    saveBenefitHighlightSeen(highlight, window.localStorage, window.sessionStorage);
+  };
+
+  const closeHighlightModal = () => {
+    markHighlightAsSeen(highlightBenefit);
+    setIsHighlightModalOpen(false);
+    setHighlightBenefit(undefined);
+  };
+
+  const handleViewHighlightedBenefit = () => {
+    if (!highlightBenefit) {
+      return;
+    }
+
+    markHighlightAsSeen(highlightBenefit);
+    setIsHighlightModalOpen(false);
+    setHighlightBenefit(undefined);
+    track('open_new_benefit_cta', {
+      origin: 'catalog',
+      id: highlightBenefit.benefit.id,
+      name: highlightBenefit.benefit.name,
+    });
+    openModal(highlightBenefit.benefit);
+  };
+
   return (
     <main className="catalog-page">
       <section className="catalog-hero" aria-labelledby="catalog-title">
@@ -188,16 +264,17 @@ const Catalog = () => {
             Cat&aacute;logo de beneficios
           </h1>
           <p className="catalog-hero__summary">
-            Encuentra comercios aliados, revisa las condiciones y ubica el beneficio que
-            puedes usar desde tu tarjeta digital.
+            Encuentra comercios aliados, revisa las condiciones y disfruta de los beneficios con tu tarjeta digital.
           </p>
         </div>
         <div className="catalog-hero__meta" aria-live="polite">
+          {activeFilterCount > 0 && (
+            <span>
+              {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+            </span>
+          )}
           <span>
             {totalBenefits} {totalBenefits === 1 ? 'beneficio' : 'beneficios'}
-          </span>
-          <span>
-            {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
           </span>
         </div>
       </section>
@@ -297,6 +374,12 @@ const Catalog = () => {
         </nav>
       )}
 
+      <BenefitHighlightModal
+        open={isHighlightModalOpen}
+        highlight={highlightBenefit}
+        onClose={closeHighlightModal}
+        onViewBenefit={handleViewHighlightedBenefit}
+      />
       <MerchantModal open={isModalOpen} benefit={selectedBenefit} onClose={closeModal} />
     </main>
   );

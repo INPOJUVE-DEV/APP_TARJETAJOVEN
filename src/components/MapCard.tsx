@@ -1,5 +1,5 @@
 import { MouseEvent } from 'react';
-import { Benefit } from '../features/catalog/catalogSlice';
+import { Benefit } from '../features/catalog/catalogTypes';
 
 interface MapCardProps {
   benefit: Benefit;

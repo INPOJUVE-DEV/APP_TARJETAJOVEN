@@ -10,6 +10,9 @@ export type AnalyticsEventName =
   | 'filter'
   | 'pagination'
   | 'open_merchant'
+  | 'open_new_benefit_modal'
+  | 'new_benefit_modal_error'
+  | 'open_new_benefit_cta'
   | 'install_click'
   | 'installed';
 
@@ -31,9 +34,6 @@ const SENSITIVE_KEYS = new Set([
   'email',
   'password',
   'confirmPassword',
-  'auth0_id_token',
-  'auth0IdToken',
-  'id_token',
   'access_token',
   'refresh_token',
   'token',

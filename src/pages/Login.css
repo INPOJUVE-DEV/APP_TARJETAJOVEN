@@ -52,7 +52,7 @@
 
 .login__eyebrow {
   margin: 0;
-  color: var(--color-primary-600);
+  color: var(--color-accent-500);
   font-size: 0.85rem;
   font-weight: 800;
   letter-spacing: 0.08em;

@@ -4,7 +4,7 @@ import { useAuth } from '../lib/useAuth';
 
 const items = [
   { to: '/perfil', label: 'Perfil' },
-  { to: '/catalog', label: 'Catalogo' },
+  { to: '/catalog', label: 'Catálogo' },
   { to: '/map', label: 'Mapa' },
   { to: '/settings', label: 'Ajustes' },
 ];
@@ -12,14 +12,14 @@ const items = [
 const MobileNav = () => {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
-  const hiddenRoutes = ['/login', '/registro', '/activar', '/activation', '/migrar-cuenta', '/auth/callback'];
+  const hiddenRoutes = ['/login', '/registro', '/activar', '/activation', '/forgot-password', '/reset-password'];
 
   if (!isAuthenticated || hiddenRoutes.includes(location.pathname)) {
     return null;
   }
 
   return (
-    <nav className="mobile-nav" aria-label="Navegacion principal movil">
+    <nav className="mobile-nav" aria-label="Navegación principal móvil">
       <ul className="mobile-nav__list">
         {items.map((item) => (
           <li key={item.to} className="mobile-nav__item">

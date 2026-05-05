@@ -1,3 +1,6 @@
+> Legacy: este documento ya no es la referencia vigente del frontend ciudadano.
+> La fuente de verdad actual es `docs/Front-beneficiarios/`.
+
 # Actualizacion del sistema del beneficiario
 
 ## Objetivo

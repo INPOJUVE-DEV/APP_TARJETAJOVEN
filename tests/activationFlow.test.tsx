@@ -4,20 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import Activation from '../src/pages/Activation';
 
 const authMocks = vi.hoisted(() => ({
-  signupWithCredentials: vi.fn(),
-  loginWithCredentials: vi.fn(),
-  refreshProfile: vi.fn(),
+  verifyActivation: vi.fn(),
+  completeActivation: vi.fn(),
   clearErrorMessage: vi.fn(),
-  logout: vi.fn(),
 }));
 
 vi.mock('../src/lib/useAuth', () => ({
   useAuth: () => ({
-    signupWithCredentials: authMocks.signupWithCredentials,
-    loginWithCredentials: authMocks.loginWithCredentials,
-    refreshProfile: authMocks.refreshProfile,
+    verifyActivation: authMocks.verifyActivation,
+    completeActivation: authMocks.completeActivation,
     clearErrorMessage: authMocks.clearErrorMessage,
-    logout: authMocks.logout,
   }),
 }));
 
@@ -25,25 +21,17 @@ describe('Activation flow', () => {
   beforeEach(() => {
     cleanup();
     window.sessionStorage.clear();
-    window.localStorage.clear();
-    authMocks.signupWithCredentials.mockReset();
-    authMocks.loginWithCredentials.mockReset();
-    authMocks.refreshProfile.mockReset();
+    authMocks.verifyActivation.mockReset();
+    authMocks.completeActivation.mockReset();
     authMocks.clearErrorMessage.mockReset();
-    authMocks.logout.mockReset();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('valida la tarjeta, limpia la CURP y espera el boton explicito para crear acceso', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ can_activate: true, message: 'ok' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
-    );
+  it('valida la tarjeta y habilita la creacion de acceso', async () => {
+    authMocks.verifyActivation.mockResolvedValue({ can_activate: true, message: 'ok' });
 
     render(
       <MemoryRouter>
@@ -51,33 +39,28 @@ describe('Activation flow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByLabelText('Numero de tarjeta'), {
+    fireEvent.change(screen.getByLabelText('Número de tarjeta'), {
       target: { value: 'TJ-000123' },
     });
     fireEvent.change(screen.getByLabelText('CURP'), {
       target: { value: 'MELR000202MSPSRD06' },
     });
 
-    fireEvent.submit(screen.getByLabelText('Numero de tarjeta').closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByLabelText('Número de tarjeta').closest('form') as HTMLFormElement);
 
-    await screen.findByText('Tarjeta validada correctamente. Ahora crea tu acceso con correo y contrasena.');
+    await screen.findByText('Tarjeta validada correctamente. Ahora crea tu acceso con correo y contraseña.');
 
-    expect(authMocks.signupWithCredentials).not.toHaveBeenCalled();
-    expect(authMocks.loginWithCredentials).not.toHaveBeenCalled();
     expect(screen.queryByLabelText('CURP')).toBeNull();
     expect(window.sessionStorage.getItem('tj.auth.pending-activation')).not.toContain('MELR000202MSPSRD06');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Crear mi acceso' }));
-
     expect(screen.getByLabelText('Correo')).toBeTruthy();
-    expect(screen.getByLabelText('Contrasena')).toBeTruthy();
+    expect(screen.getByLabelText('Contraseña')).toBeTruthy();
   });
 
   it('muestra el estado blocked cuando la API devuelve 403', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ message: 'No permitido' }), {
+    authMocks.verifyActivation.mockRejectedValue(
+      Object.assign(new Error('Bloqueado'), {
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
+        payload: { message: 'Bloqueado' },
       }),
     );
 
@@ -87,17 +70,59 @@ describe('Activation flow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByLabelText('Numero de tarjeta'), {
+    fireEvent.change(screen.getByLabelText('Número de tarjeta'), {
       target: { value: 'TJ-000123' },
     });
     fireEvent.change(screen.getByLabelText('CURP'), {
       target: { value: 'MELR000202MSPSRD06' },
     });
 
-    fireEvent.submit(screen.getByLabelText('Numero de tarjeta').closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByLabelText('Número de tarjeta').closest('form') as HTMLFormElement);
 
     await waitFor(() => {
       expect(screen.getByText('Esta tarjeta no esta activa. Acude a soporte.')).toBeTruthy();
+    });
+  });
+
+  it('completa la activacion con correo y password_confirmation', async () => {
+    authMocks.verifyActivation.mockResolvedValue({ can_activate: true, message: 'ok' });
+    authMocks.completeActivation.mockResolvedValue(null);
+
+    render(
+      <MemoryRouter>
+        <Activation />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText('Número de tarjeta'), {
+      target: { value: 'TJ-000123' },
+    });
+    fireEvent.change(screen.getByLabelText('CURP'), {
+      target: { value: 'MELR000202MSPSRD06' },
+    });
+    fireEvent.submit(screen.getByLabelText('Número de tarjeta').closest('form') as HTMLFormElement);
+
+    await screen.findByLabelText('Correo');
+
+    fireEvent.change(screen.getByLabelText('Correo'), {
+      target: { value: 'ana@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
+      target: { value: 'Segura123456' },
+    });
+    fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
+      target: { value: 'Segura123456' },
+    });
+
+    fireEvent.submit(screen.getByLabelText('Correo').closest('form') as HTMLFormElement);
+
+    await waitFor(() => {
+      expect(authMocks.completeActivation).toHaveBeenCalledWith({
+        tarjetaNumero: 'TJ-000123',
+        email: 'ana@example.com',
+        password: 'Segura123456',
+        passwordConfirmation: 'Segura123456',
+      });
     });
   });
 });

@@ -5,14 +5,22 @@ export type ActivationErrorKind = 'already_linked' | 'blocked' | 'invalid' | 'se
 const GENERIC_ACTIVATION_ERROR = 'Los datos no coinciden. Verifica tu numero de tarjeta y CURP.';
 const GENERIC_REQUEST_ERROR = 'No pudimos procesar la solicitud. Intenta mas tarde.';
 
+const getApiMessage = (error: unknown) => {
+  if (!isApiError(error)) {
+    return '';
+  }
+
+  if (typeof error.payload === 'object' && error.payload && 'message' in error.payload) {
+    return String((error.payload as Record<string, unknown>).message ?? '').toLowerCase();
+  }
+
+  return error.message.toLowerCase();
+};
+
 const mapApiStatusToMessage = (status: number) => {
   switch (status) {
     case 401:
       return 'Tu acceso expiro. Inicia sesion nuevamente.';
-    case 403:
-      return 'Esta tarjeta no esta activa. Acude a soporte.';
-    case 409:
-      return 'Esta tarjeta ya tiene una cuenta asociada.';
     case 410:
       return 'Este flujo ya no esta disponible. Usa la activacion vigente.';
     case 422:
@@ -24,6 +32,41 @@ const mapApiStatusToMessage = (status: number) => {
   }
 };
 
+export const isAccountAlreadyLinkedError = (error: unknown) =>
+  isApiError(error) &&
+  error.status === 409 &&
+  (
+    getApiMessage(error).includes('ya tiene una cuenta asociada') ||
+    getApiMessage(error).includes('ya esta vinculada') ||
+    getApiMessage(error).includes('ya cuenta con una cuenta vinculada') ||
+    getApiMessage(error).includes('duplicado') ||
+    getApiMessage(error).includes('email ya')
+  );
+
+export const isBlockedActivationError = (error: unknown) =>
+  isApiError(error) &&
+  (
+    (error.status === 403 &&
+      (
+        getApiMessage(error).includes('bloquead') ||
+        getApiMessage(error).includes('no permitido') ||
+        getApiMessage(error).includes('no esta activa') ||
+        getApiMessage(error).includes('no esta disponible')
+      )) ||
+    (error.status === 409 && getApiMessage(error).includes('no esta activa'))
+  );
+
+export const isInvalidActivationError = (error: unknown) =>
+  isApiError(error) &&
+  (error.status === 422 ||
+    (error.status === 403 && !isBlockedActivationError(error)) ||
+    (error.status === 409 && !isBlockedActivationError(error) && !isAccountAlreadyLinkedError(error)));
+
+export const isSessionExpiredError = (error: unknown) =>
+  isApiError(error) && error.status === 401;
+
+export const isUnlinkedProfileError = (_error: ApiError) => false;
+
 export const getRequestErrorMessage = (
   error: unknown,
   options?: {
@@ -31,6 +74,18 @@ export const getRequestErrorMessage = (
     useGenericActivationError?: boolean;
   },
 ) => {
+  if (isAccountAlreadyLinkedError(error)) {
+    return 'Esta tarjeta ya tiene una cuenta asociada.';
+  }
+
+  if (isBlockedActivationError(error)) {
+    return 'Esta tarjeta no esta activa. Acude a soporte.';
+  }
+
+  if (isInvalidActivationError(error)) {
+    return GENERIC_ACTIVATION_ERROR;
+  }
+
   if (options?.useGenericActivationError && isApiError(error)) {
     if (error.status === 403 || error.status === 409 || error.status === 422) {
       return mapApiStatusToMessage(error.status);
@@ -38,6 +93,10 @@ export const getRequestErrorMessage = (
   }
 
   if (isApiError(error)) {
+    if (typeof error.payload === 'object' && error.payload && 'message' in error.payload) {
+      return String((error.payload as Record<string, unknown>).message ?? mapApiStatusToMessage(error.status));
+    }
+
     return mapApiStatusToMessage(error.status);
   }
 
@@ -47,21 +106,6 @@ export const getRequestErrorMessage = (
 
   return options?.fallbackMessage ?? GENERIC_REQUEST_ERROR;
 };
-
-export const isAccountAlreadyLinkedError = (error: unknown) =>
-  isApiError(error) && error.status === 409;
-
-export const isBlockedActivationError = (error: unknown) =>
-  isApiError(error) && error.status === 403;
-
-export const isInvalidActivationError = (error: unknown) =>
-  isApiError(error) && error.status === 422;
-
-export const isSessionExpiredError = (error: unknown) =>
-  isApiError(error) && error.status === 401;
-
-export const isUnlinkedProfileError = (error: ApiError) =>
-  error.status === 403 || error.status === 404 || error.status === 410;
 
 export const getActivationErrorKind = (error: unknown): ActivationErrorKind => {
   if (isAccountAlreadyLinkedError(error)) {

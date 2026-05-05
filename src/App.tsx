@@ -13,9 +13,10 @@ import A2HSBanner from './components/A2HSBanner';
 import MobileNav from './components/MobileNav';
 import { track } from './lib/analytics';
 import Activation from './pages/Activation';
-import Migration from './pages/Migration';
-import AuthCallback from './pages/AuthCallback';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProcedurePoints from './pages/ProcedurePoints';
 
 const App = () => {
   useEffect(() => {
@@ -30,14 +31,23 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/registro" element={<Navigate to="/activar" replace />} />
         <Route path="/activar" element={<Activation />} />
         <Route path="/activation" element={<Activation />} />
-        <Route path="/migrar-cuenta" element={<Migration />} />
-        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/puntos-de-tramite" element={<ProcedurePoints />} />
+        <Route path="/migrar-cuenta" element={<Navigate to="/forgot-password" replace />} />
         <Route path="/registro/tarjeta-fisica" element={<Navigate to="/activar" replace />} />
         <Route path="/registro/tarjeta-fisica/crear-usuario" element={<Navigate to="/activar" replace />} />
-        <Route path="/catalog" element={<Catalog />} />
+        <Route
+          path="/catalog"
+          element={
+            <ProtectedRoute>
+              <Catalog />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/perfil"
           element={
@@ -46,9 +56,30 @@ const App = () => {
             </ProtectedRoute>
           }
         />
-        <Route path="/map" element={<MapPage />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/help" element={<Help />} />
+        <Route
+          path="/map"
+          element={
+            <ProtectedRoute>
+              <MapPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/help"
+          element={
+            <ProtectedRoute>
+              <Help />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       <MobileNav />
     </>

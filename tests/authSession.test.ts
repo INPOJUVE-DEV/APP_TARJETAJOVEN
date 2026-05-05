@@ -1,67 +1,52 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  clearStoredAuthSession,
-  getStoredAuthSession,
-  persistAuthSession,
-  shouldRefreshAuthSession,
+  clearAuthSession,
+  getAuthSession,
+  setAuthSession,
+  subscribeAuthSession,
 } from '../src/lib/authSession';
 
 describe('authSession', () => {
   beforeEach(() => {
+    clearAuthSession();
     window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
-  it('persiste y recupera la sesion embebida', () => {
-    persistAuthSession({
+  it('mantiene la sesion solo en memoria', () => {
+    setAuthSession({
       accessToken: 'access-token',
-      idToken: 'id-token',
-      refreshToken: 'refresh-token',
-      tokenType: 'Bearer',
-      scope: 'openid profile email offline_access',
-      expiresAt: 1_900_000_000_000,
+      expiresIn: 900,
+      user: {
+        id: 1,
+        email: 'ana@example.com',
+      },
     });
 
-    expect(getStoredAuthSession()).toEqual({
+    expect(getAuthSession()).toEqual({
       accessToken: 'access-token',
-      idToken: 'id-token',
-      refreshToken: 'refresh-token',
-      tokenType: 'Bearer',
-      scope: 'openid profile email offline_access',
-      expiresAt: 1_900_000_000_000,
+      expiresIn: 900,
+      user: {
+        id: 1,
+        email: 'ana@example.com',
+      },
     });
+    expect(window.localStorage.length).toBe(0);
+    expect(window.sessionStorage.length).toBe(0);
   });
 
-  it('indica cuando la sesion debe refrescarse', () => {
-    expect(
-      shouldRefreshAuthSession(
-        {
-          accessToken: 'access-token',
-          idToken: 'id-token',
-          refreshToken: 'refresh-token',
-          tokenType: 'Bearer',
-          scope: 'openid',
-          expiresAt: 2_000,
-        },
-        {
-          now: 1_500,
-          bufferMs: 600,
-        },
-      ),
-    ).toBe(true);
-  });
+  it('notifica cambios y limpia la sesion', () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeAuthSession(listener);
 
-  it('elimina la sesion al limpiar el almacenamiento', () => {
-    persistAuthSession({
+    setAuthSession({
       accessToken: 'access-token',
-      idToken: 'id-token',
-      refreshToken: 'refresh-token',
-      tokenType: 'Bearer',
-      scope: 'openid',
-      expiresAt: 1_900_000_000_000,
     });
+    clearAuthSession();
 
-    clearStoredAuthSession();
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(getAuthSession().accessToken).toBeNull();
 
-    expect(getStoredAuthSession()).toBeNull();
+    unsubscribe();
   });
 });

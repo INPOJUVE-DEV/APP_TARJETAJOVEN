@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/useAuth';
 import { isValidEmail } from '../lib/validators';
@@ -11,7 +11,7 @@ type LoginErrors = {
 };
 
 const Login = () => {
-  const { loginWithCredentials, refreshProfile, status, errorMessage, clearErrorMessage, isAuthReady } = useAuth();
+  const { login, status, errorMessage, clearErrorMessage, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState('');
@@ -19,25 +19,24 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<LoginErrors>({});
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      navigate('/perfil', { replace: true });
+  const redirectTo = useMemo(() => {
+    if (typeof location.state === 'object' && location.state && 'from' in location.state) {
+      return String(location.state.from);
     }
-  }, [navigate, status]);
+
+    return '/perfil';
+  }, [location.state]);
 
   useEffect(() => {
-    if (status === 'unlinked') {
-      navigate('/migrar-cuenta', {
-        replace: true,
-        state: { from: location.pathname },
-      });
+    if (status === 'authenticated') {
+      navigate(redirectTo, { replace: true });
     }
-  }, [location.pathname, navigate, status]);
+  }, [navigate, redirectTo, status]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nextErrors: LoginErrors = {};
     const normalizedEmail = email.trim().toLowerCase();
+    const nextErrors: LoginErrors = {};
 
     if (!normalizedEmail) {
       nextErrors.email = 'Ingresa tu correo.';
@@ -46,7 +45,7 @@ const Login = () => {
     }
 
     if (!password) {
-      nextErrors.password = 'Ingresa tu contrasena.';
+      nextErrors.password = 'Ingresa tu contraseña.';
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -59,27 +58,34 @@ const Login = () => {
     setIsSubmitting(true);
 
     try {
-      await loginWithCredentials(normalizedEmail, password);
-      const profile = await refreshProfile();
-      if (profile) {
-        navigate('/perfil', { replace: true });
-      }
-    } catch (error) {
-      setFormErrors({
-        general: error instanceof Error ? error.message : 'No pudimos iniciar sesion.',
-      });
+      await login(normalizedEmail, password);
+    } catch {
+      setFormErrors((current) => ({
+        ...current,
+        general: 'No pudimos iniciar sesión. Revisa tus datos e intenta de nuevo.',
+      }));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const statusMessage =
+    (typeof location.state === 'object' &&
+      location.state &&
+      'successMessage' in location.state &&
+      typeof location.state.successMessage === 'string'
+      ? location.state.successMessage
+      : null) ||
+    formErrors.general ||
+    errorMessage;
+
   return (
     <main className="login" aria-labelledby="login-title">
       <section className="login__card" aria-labelledby="login-title">
         <p className="login__eyebrow">Acceso digital</p>
-        <h1 id="login-title">Inicia sesion</h1>
+        <h1 id="login-title">Inicia sesión</h1>
         <p className="login__hint">
-          Usa el correo y la contrasena con los que creaste tu acceso para entrar a tu perfil.
+          Entra con el correo que vinculaste a tu Tarjeta Joven y tu contraseña local.
         </p>
 
         <form className="login__form" onSubmit={handleLogin} noValidate>
@@ -102,7 +108,7 @@ const Login = () => {
           </div>
 
           <div className={`login__field${formErrors.password ? ' is-invalid' : ''}`}>
-            <label htmlFor="loginPassword">Contrasena</label>
+              <label htmlFor="loginPassword">Contraseña</label>
             <input
               id="loginPassword"
               type="password"
@@ -111,7 +117,7 @@ const Login = () => {
                 setPassword(event.target.value);
                 setFormErrors((current) => ({ ...current, password: undefined, general: undefined }));
               }}
-              placeholder="Tu contrasena"
+              placeholder="Tu contraseña"
               autoComplete="current-password"
               disabled={!isAuthReady || isSubmitting || status === 'loading'}
               required
@@ -119,19 +125,20 @@ const Login = () => {
             {formErrors.password && <p className="login__error">{formErrors.password}</p>}
           </div>
 
+          <Link to="/forgot-password" className="login__secondary">
+            Olvidé mi contraseña
+          </Link>
+
           <button type="submit" className="login__submit" disabled={!isAuthReady || isSubmitting || status === 'loading'}>
-            {isSubmitting || status === 'loading' ? 'Validando...' : 'Entrar a mi perfil'}
+            {isSubmitting || status === 'loading' ? 'Ingresando...' : 'Entrar'}
           </button>
 
           <Link to="/activar" className="login__secondary">
             Activar mi tarjeta
           </Link>
-          <Link to="/migrar-cuenta" className="login__secondary">
-            Necesito ayuda con mi acceso
-          </Link>
 
           <p className="login__status" role="status" aria-live="polite">
-            {formErrors.general || errorMessage}
+            {statusMessage}
           </p>
         </form>
       </section>

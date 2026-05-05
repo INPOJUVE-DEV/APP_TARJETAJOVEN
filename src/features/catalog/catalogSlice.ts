@@ -1,49 +1,12 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { apiBaseQuery } from '../../lib/apiClient';
-
-export interface Benefit {
-  id: string;
-  name: string;
-  category: string;
-  municipality: string;
-  discount: string;
-  address?: string;
-  schedule?: string;
-  description?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface CatalogMeta {
-  page: number;
-  totalPages: number;
-  total: number;
-  pageSize?: number;
-  nextPage?: number | null;
-  prevPage?: number | null;
-  filters?: {
-    categories?: string[];
-    municipalities?: string[];
-  };
-}
-
-export interface CatalogResponse {
-  data: Benefit[];
-  meta: CatalogMeta;
-}
-
-interface CatalogItemDto {
-  id: string;
-  nombre: string;
-  categoria: string;
-  municipio: string;
-  descuento: string;
-  direccion?: string | null;
-  horario?: string | null;
-  descripcion?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-}
+import { CatalogItemDto, mapCatalogItemToBenefit } from './catalogMappers';
+import {
+  BenefitHighlightsDto,
+  BenefitHighlightsResponse,
+  mapHighlightResponse,
+} from './catalogHighlights';
+import { Benefit, CatalogResponse } from './catalogTypes';
 
 interface CatalogListDto {
   items?: CatalogItemDto[];
@@ -61,18 +24,10 @@ export interface CatalogQueryArgs {
   pageSize?: number;
 }
 
-const mapCatalogItemToBenefit = (item: CatalogItemDto): Benefit => ({
-  id: item.id,
-  name: item.nombre,
-  category: item.categoria,
-  municipality: item.municipio,
-  discount: item.descuento,
-  address: item.direccion ?? undefined,
-  schedule: item.horario ?? undefined,
-  description: item.descripcion ?? undefined,
-  latitude: typeof item.lat === 'number' ? item.lat : undefined,
-  longitude: typeof item.lng === 'number' ? item.lng : undefined,
-});
+export interface CatalogHighlightsQueryArgs {
+  since?: string;
+  limit?: number;
+}
 
 const uniqueValues = (values: Array<string | undefined>): string[] =>
   Array.from(
@@ -151,7 +106,38 @@ export const catalogApi = createApi({
             ]
           : [{ type: 'Catalog' as const, id: 'LIST' }],
     }),
+    getCatalogDetail: builder.query<Benefit, string>({
+      query: (id) => ({
+        url: `catalog/${id}`,
+      }),
+      transformResponse: (response: CatalogItemDto): Benefit => mapCatalogItemToBenefit(response),
+      providesTags: (_result, _error, id) => [{ type: 'Catalog' as const, id }],
+    }),
+    getCatalogHighlights: builder.query<BenefitHighlightsResponse, CatalogHighlightsQueryArgs | void>({
+      query: (args) => {
+        const searchParams = new URLSearchParams();
+
+        if (args?.since) {
+          searchParams.set('since', args.since);
+        }
+
+        if (args?.limit) {
+          searchParams.set('limit', String(args.limit));
+        }
+
+        return {
+          url: `catalog/highlights${searchParams.toString() ? `?${searchParams.toString()}` : ''}`,
+        };
+      },
+      transformResponse: (response: BenefitHighlightsDto) => mapHighlightResponse(response),
+      providesTags: () => [{ type: 'Catalog' as const, id: 'HIGHLIGHTS' }],
+    }),
   }),
 });
 
-export const { useGetCatalogQuery, useLazyGetCatalogQuery } = catalogApi;
+export const {
+  useGetCatalogQuery,
+  useLazyGetCatalogQuery,
+  useGetCatalogDetailQuery,
+  useLazyGetCatalogHighlightsQuery,
+} = catalogApi;

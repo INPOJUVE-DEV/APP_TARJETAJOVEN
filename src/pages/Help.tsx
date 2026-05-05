@@ -29,7 +29,7 @@ const faqs: FAQ[] = [
     answer: 'Personas que ya tienen una tarjeta fisica y necesitan vincular su acceso digital.',
     details: [
       'La app valida numero de tarjeta y CURP.',
-      'Despues creas tu acceso con correo y contrasena.',
+      'Después creas tu acceso con correo y contraseña.',
     ],
     tags: ['activacion', 'curp', 'tarjeta'],
   },
@@ -63,13 +63,13 @@ const faqs: FAQ[] = [
   {
     id: 'password',
     category: 'support',
-    question: 'Olvide mi acceso. Que hago?',
-    answer: 'Inicia sesion con tu correo y contrasena desde la pantalla principal de acceso.',
+    question: 'Olvidé mi acceso. ¿Qué hago?',
+    answer: 'Usa la opción de recuperación de contraseña desde la pantalla de login.',
     details: [
-      'Si tu cuenta ya esta vinculada, usa el canal oficial de recuperacion de acceso.',
+      'Recibiras un enlace para restablecer tu acceso si el correo existe y esta habilitado.',
       'Si aun no esta vinculada, primero activa tu tarjeta.',
     ],
-    tags: ['password', 'migracion', 'acceso'],
+    tags: ['password', 'recuperacion', 'acceso'],
   },
   {
     id: 'support',
@@ -192,7 +192,7 @@ const Help = () => {
       <header className="help-page__header">
         <h1 id="help-title">Centro de ayuda</h1>
         <p className="help-page__intro">
-          Resuelve dudas sobre activacion, beneficios y soporte tecnico en minutos.
+          Resuelve dudas sobre activación, beneficios y soporte técnico en minutos.
         </p>
       </header>
 

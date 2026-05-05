@@ -496,3 +496,5 @@ No corresponde a APP_TARJETAJOVEN:
 5. Ajustar `/me`.
 6. Pruebas de seguridad.
 7. QA completo del flujo de activación.
+> Legacy: este documento describe un flujo con Auth0 que ya no aplica al frontend ciudadano actual.
+> La fuente de verdad vigente es `docs/Front-beneficiarios/`.

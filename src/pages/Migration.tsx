@@ -10,14 +10,14 @@ const Migration = () => {
         <h1 id="migration-title">Tu acceso ya es digital</h1>
         <p className="login__hint">
           Si tu cuenta aun no esta vinculada, activa tu tarjeta para crear tu acceso con correo y
-          contrasena. Si ya lo hiciste, intenta iniciar sesion de nuevo.
+          contraseña. Si ya lo hiciste, intenta iniciar sesión de nuevo.
         </p>
         <div className="login__form">
           <Link to="/activar" className="login__submit">
             Activar mi cuenta
           </Link>
           <Link to="/login" className="login__secondary">
-            Intentar iniciar sesion
+            Intentar iniciar sesión
           </Link>
         </div>
       </section>

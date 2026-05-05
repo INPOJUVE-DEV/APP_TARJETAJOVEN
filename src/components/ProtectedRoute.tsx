@@ -10,15 +10,11 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return (
       <main className="login" aria-busy="true" aria-live="polite">
         <section className="login__card">
-          <h1>Validando sesion</h1>
+          <h1>Validando sesión</h1>
           <p>Estamos recuperando tu acceso seguro.</p>
         </section>
       </main>
     );
-  }
-
-  if (status === 'unlinked') {
-    return <Navigate to="/migrar-cuenta" replace state={{ from: location.pathname }} />;
   }
 
   if (status !== 'authenticated') {

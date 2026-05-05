@@ -90,3 +90,5 @@ El formulario `/registro` ahora captura domicilio completo (calle, numero exteri
   - `500` solo ante fallas inesperadas (el frontend mostrara un mensaje generico).
 
 > Nota: El frontend ya esta enviando estos campos y espera una respuesta JSON con `message`. Mientras se aplican los ajustes la UI mostrara un error generico.
+> Legacy: este documento conserva contratos previos de lookup/creacion de cuenta y ya no define el flujo vigente del frontend ciudadano.
+> La referencia actual es `docs/Front-beneficiarios/`.

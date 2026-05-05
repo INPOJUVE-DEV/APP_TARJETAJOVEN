@@ -4,15 +4,13 @@ import { MemoryRouter } from 'react-router-dom';
 import Login from '../src/pages/Login';
 
 const authMocks = vi.hoisted(() => ({
-  loginWithCredentials: vi.fn(),
-  refreshProfile: vi.fn(),
+  login: vi.fn(),
   clearErrorMessage: vi.fn(),
 }));
 
 vi.mock('../src/lib/useAuth', () => ({
   useAuth: () => ({
-    loginWithCredentials: authMocks.loginWithCredentials,
-    refreshProfile: authMocks.refreshProfile,
+    login: authMocks.login,
     clearErrorMessage: authMocks.clearErrorMessage,
     status: 'unauthenticated',
     errorMessage: null,
@@ -23,8 +21,7 @@ vi.mock('../src/lib/useAuth', () => ({
 describe('Login flow', () => {
   beforeEach(() => {
     cleanup();
-    authMocks.loginWithCredentials.mockReset();
-    authMocks.refreshProfile.mockReset();
+    authMocks.login.mockReset();
     authMocks.clearErrorMessage.mockReset();
   });
 
@@ -32,20 +29,8 @@ describe('Login flow', () => {
     vi.restoreAllMocks();
   });
 
-  it('envia correo y contrasena al iniciar sesion', async () => {
-    authMocks.loginWithCredentials.mockResolvedValue({
-      accessToken: 'access-token',
-      idToken: 'id-token',
-      refreshToken: 'refresh-token',
-      tokenType: 'Bearer',
-      scope: 'openid profile email offline_access',
-      expiresAt: Date.now() + 3_600_000,
-    });
-    authMocks.refreshProfile.mockResolvedValue({
-      id: '1',
-      nombre: 'Ana',
-      apellidos: 'Lopez',
-    });
+  it('envia correo y contrasena al iniciar sesion local', async () => {
+    authMocks.login.mockResolvedValue(null);
 
     render(
       <MemoryRouter>
@@ -56,15 +41,15 @@ describe('Login flow', () => {
     fireEvent.change(screen.getByLabelText('Correo'), {
       target: { value: 'ana@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Contrasena'), {
-      target: { value: 'Secreta123' },
+    fireEvent.change(screen.getByLabelText('Contraseña'), {
+      target: { value: 'Segura123456' },
     });
 
     fireEvent.submit(screen.getByLabelText('Correo').closest('form') as HTMLFormElement);
 
     await waitFor(() => {
-      expect(authMocks.loginWithCredentials).toHaveBeenCalledWith('ana@example.com', 'Secreta123');
+      expect(authMocks.login).toHaveBeenCalledWith('ana@example.com', 'Segura123456');
     });
-    expect(authMocks.refreshProfile).toHaveBeenCalled();
+    expect(screen.getByText('Olvidé mi contraseña')).toBeTruthy();
   });
 });

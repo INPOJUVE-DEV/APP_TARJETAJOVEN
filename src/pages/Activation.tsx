@@ -1,24 +1,27 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { cardholderApi } from '../lib/api/cardholders';
 import { clearPendingActivation, getPendingActivation, persistPendingActivation } from '../lib/authFlow';
 import { normalizeCurp, isValidCurp } from '../lib/curp';
 import {
   ActivationErrorKind,
   getActivationErrorKind,
   getRequestErrorMessage,
-  isSessionExpiredError,
 } from '../lib/requestErrors';
 import { useAuth } from '../lib/useAuth';
-import { isSecurePassword, isValidEmail } from '../lib/validators';
+import {
+  isSecurePassword,
+  isValidEmail,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  passwordsMatch,
+} from '../lib/validators';
 import './Activation.css';
 
 type ActivationUiState =
   | 'idle'
   | 'validating'
   | 'validated'
-  | 'creating_access'
-  | 'linking_account'
+  | 'creating_account'
   | 'success'
   | 'already_linked'
   | 'blocked'
@@ -57,13 +60,7 @@ const RECOVERABLE_STATES: ActivationUiState[] = [
 
 const Activation = () => {
   const navigate = useNavigate();
-  const {
-    signupWithCredentials,
-    loginWithCredentials,
-    refreshProfile,
-    clearErrorMessage,
-    logout,
-  } = useAuth();
+  const { verifyActivation, completeActivation, clearErrorMessage } = useAuth();
 
   const [tarjetaNumero, setTarjetaNumero] = useState('');
   const [curp, setCurp] = useState('');
@@ -73,12 +70,11 @@ const Activation = () => {
     getPendingActivation() ? 'validated' : 'idle',
   );
   const [formErrors, setFormErrors] = useState<ActivationFormErrors>({});
-  const [accessStepStarted, setAccessStepStarted] = useState(false);
 
   const normalizedTarjeta = useMemo(() => tarjetaNumero.trim().toUpperCase(), [tarjetaNumero]);
   const normalizedCurp = useMemo(() => normalizeCurp(curp), [curp]);
   const normalizedEmail = useMemo(() => credentials.email.trim().toLowerCase(), [credentials.email]);
-  const isBusy = uiState === 'validating' || uiState === 'creating_access' || uiState === 'linking_account';
+  const isBusy = uiState === 'validating' || uiState === 'creating_account';
 
   useEffect(() => {
     const pendingActivation = getPendingActivation();
@@ -96,7 +92,7 @@ const Activation = () => {
   };
 
   const currentStep = (() => {
-    if (uiState === 'linking_account' || uiState === 'success' || uiState === 'already_linked') {
+    if (uiState === 'success') {
       return 3;
     }
 
@@ -111,7 +107,7 @@ const Activation = () => {
     const nextErrors: ActivationFormErrors = {};
 
     if (!normalizedTarjeta) {
-      nextErrors.tarjetaNumero = 'Ingresa el numero de tarjeta.';
+      nextErrors.tarjetaNumero = 'Ingresa el número de tarjeta.';
     }
 
     if (!normalizedCurp) {
@@ -133,29 +129,28 @@ const Activation = () => {
     }
 
     if (!credentials.password) {
-      nextErrors.password = 'Crea una contrasena.';
+      nextErrors.password = 'Crea una contraseña.';
     } else if (!isSecurePassword(credentials.password)) {
-      nextErrors.password = 'Usa al menos 8 caracteres, con mayuscula, minuscula y numero.';
+      nextErrors.password = `Usa entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres, con mayuscula, minuscula y numero.`;
     }
 
     if (!credentials.confirmPassword) {
-      nextErrors.confirmPassword = 'Confirma tu contrasena.';
-    } else if (credentials.confirmPassword !== credentials.password) {
-      nextErrors.confirmPassword = 'Las contrasenas no coinciden.';
+      nextErrors.confirmPassword = 'Confirma tu contraseña.';
+    } else if (!passwordsMatch(credentials.password, credentials.confirmPassword)) {
+      nextErrors.confirmPassword = 'Las contraseñas no coinciden.';
     }
 
     return nextErrors;
   };
 
-  const applyActivationError = async (
+  const applyActivationError = (
     error: unknown,
-    options?: { fallbackMessage?: string; clearAccessSession?: boolean },
+    options?: {
+      fallbackMessage?: string;
+      resetVerification?: boolean;
+    },
   ) => {
     const errorKind = getActivationErrorKind(error);
-    if (options?.clearAccessSession || isSessionExpiredError(error)) {
-      await logout();
-    }
-
     const nextState: Record<ActivationErrorKind, ActivationUiState> = {
       already_linked: 'already_linked',
       blocked: 'blocked',
@@ -164,8 +159,10 @@ const Activation = () => {
       error: 'error',
     };
 
-    if (errorKind === 'invalid' || errorKind === 'blocked' || errorKind === 'error') {
-      setAccessStepStarted(false);
+    if (options?.resetVerification) {
+      clearPendingActivation();
+      setActivationState(null);
+      setCredentials(INITIAL_CREDENTIALS);
     }
 
     setUiState(nextState[errorKind]);
@@ -175,6 +172,30 @@ const Activation = () => {
         useGenericActivationError: true,
       }),
     });
+  };
+
+  const applyCredentialApiErrors = (error: unknown) => {
+    const apiMessage = getRequestErrorMessage(error, {
+      fallbackMessage: 'No pudimos completar la activacion. Intenta de nuevo.',
+    });
+    const normalizedMessage = apiMessage.toLowerCase();
+
+    if (normalizedMessage.includes('password_confirmation') || normalizedMessage.includes('coincid')) {
+      setFormErrors({ confirmPassword: apiMessage });
+      return true;
+    }
+
+    if (normalizedMessage.includes('password')) {
+      setFormErrors({ password: apiMessage });
+      return true;
+    }
+
+    if (normalizedMessage.includes('email') || normalizedMessage.includes('correo')) {
+      setFormErrors({ email: apiMessage });
+      return true;
+    }
+
+    return false;
   };
 
   const handleValidateCardholder = async (event: FormEvent<HTMLFormElement>) => {
@@ -190,7 +211,7 @@ const Activation = () => {
     clearErrorMessage();
 
     try {
-      const response = await cardholderApi.verifyActivation({
+      const response = await verifyActivation({
         tarjetaNumero: normalizedTarjeta,
         curp: normalizedCurp,
       });
@@ -208,25 +229,17 @@ const Activation = () => {
       setActivationState(nextActivationState);
       setCurp('');
       setCredentials(INITIAL_CREDENTIALS);
-      setAccessStepStarted(false);
       setUiState('validated');
       setFormErrors({
-        general: 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contrasena.',
+        general: 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contraseña.',
       });
     } catch (error) {
       clearPendingActivation();
       setActivationState(null);
-      await applyActivationError(error, {
+      applyActivationError(error, {
         fallbackMessage: 'No se pudo validar la tarjeta con los datos proporcionados.',
       });
     }
-  };
-
-  const handleStartSignup = () => {
-    clearErrorMessage();
-    setAccessStepStarted(true);
-    setUiState('validated');
-    setFormErrors({});
   };
 
   const handleCompleteActivation = async (event: FormEvent<HTMLFormElement>) => {
@@ -243,58 +256,46 @@ const Activation = () => {
 
     clearErrorMessage();
     setFormErrors({});
-    setUiState('creating_access');
+    setUiState('creating_account');
 
     try {
-      await signupWithCredentials(normalizedEmail, credentials.password);
-    } catch (signupError) {
-      const message = signupError instanceof Error ? signupError.message : 'No pudimos crear tu acceso.';
-      setUiState('validated');
-      setAccessStepStarted(true);
-      setFormErrors({
-        ...(message.toLowerCase().includes('correo') ? { email: message } : { general: message }),
-      });
-      return;
-    }
-
-    try {
-      const session = await loginWithCredentials(normalizedEmail, credentials.password);
-      setUiState('linking_account');
-
-      await cardholderApi.completeActivation({
+      await completeActivation({
         tarjetaNumero: activationState.tarjetaNumero,
-        auth0IdToken: session.idToken,
+        email: normalizedEmail,
+        password: credentials.password,
+        passwordConfirmation: credentials.confirmPassword,
       });
 
       clearPendingActivation();
       setActivationState(null);
       setUiState('success');
       setFormErrors({
-        general: 'Cuenta vinculada correctamente. Estamos cargando tu perfil.',
+        general: 'Cuenta activada correctamente. Estamos cargando tu perfil.',
       });
-      await refreshProfile();
       navigate('/perfil', { replace: true });
     } catch (error) {
-      clearPendingActivation();
-      setActivationState(null);
-      await applyActivationError(error, {
-        fallbackMessage: 'No pudimos vincular tu cuenta. Intenta de nuevo.',
-        clearAccessSession: true,
+      if (applyCredentialApiErrors(error)) {
+        setUiState('validated');
+        return;
+      }
+
+      const errorKind = getActivationErrorKind(error);
+      applyActivationError(error, {
+        fallbackMessage: 'No pudimos completar la activacion. Intenta de nuevo.',
+        resetVerification: errorKind === 'blocked' || errorKind === 'invalid',
       });
     }
   };
 
-  const handleResetActivation = async () => {
+  const handleResetActivation = () => {
     clearPendingActivation();
     clearErrorMessage();
     setTarjetaNumero('');
     setCurp('');
     setCredentials(INITIAL_CREDENTIALS);
     setActivationState(null);
-    setAccessStepStarted(false);
     setUiState('idle');
     clearFormErrors();
-    await logout();
   };
 
   const updateCredential = (field: keyof ActivationCredentials, value: string) => {
@@ -314,17 +315,13 @@ const Activation = () => {
       case 'validating':
         return 'Estamos validando tu tarjeta y tu CURP.';
       case 'validated':
-        return accessStepStarted
-          ? 'Completa tu correo y contrasena para crear tu acceso.'
-          : 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contrasena.';
-      case 'creating_access':
-        return 'Estamos creando tu acceso.';
-      case 'linking_account':
-        return 'Estamos vinculando tu cuenta con Tarjeta Joven.';
+        return 'Tarjeta validada correctamente. Ahora crea tu acceso con correo y contraseña.';
+      case 'creating_account':
+        return 'Estamos activando tu cuenta.';
       case 'success':
-        return 'Tu cuenta quedo vinculada correctamente.';
+        return 'Tu cuenta quedo activada correctamente.';
       case 'already_linked':
-        return 'Esta tarjeta ya tiene una cuenta asociada. Inicia sesion para continuar.';
+        return 'Esta tarjeta ya tiene una cuenta asociada. Inicia sesión o recupera tu acceso.';
       case 'blocked':
         return 'Esta tarjeta no esta activa. Acude a soporte.';
       case 'invalid':
@@ -332,9 +329,12 @@ const Activation = () => {
       case 'error':
         return 'No pudimos completar la activacion. Revisa el mensaje y vuelve a intentarlo.';
       default:
-        return 'Valida tus datos para continuar con tu activacion.';
+        return '';
     }
   })();
+
+  const progressValue = (currentStep / 3) * 100;
+  const shouldShowFeedback = uiState !== 'idle' || Boolean(formErrors.general);
 
   return (
     <main className="activation" aria-labelledby="activation-title">
@@ -345,43 +345,36 @@ const Activation = () => {
           Sigue estos pasos para validar tu tarjeta, crear tu acceso y entrar a tu perfil digital.
         </p>
 
-        <ol className="activation__stepper" aria-label="Pasos de activacion">
-          {[
-            'Validar datos',
-            'Crear acceso',
-            'Vincular cuenta',
-          ].map((stepLabel, index) => {
-            const stepNumber = index + 1;
-            const isActive = currentStep === stepNumber;
-            const isComplete = currentStep > stepNumber || (uiState === 'success' && stepNumber === 3);
-
-            return (
-              <li
-                key={stepLabel}
-                className={`activation__stepper-item${isActive ? ' activation__stepper-item--active' : ''}${
-                  isComplete ? ' activation__stepper-item--complete' : ''
-                }`}
-              >
-                <span className="activation__stepper-index" aria-hidden="true">
-                  {stepNumber}
-                </span>
-                <span>{stepLabel}</span>
-              </li>
-            );
-          })}
-        </ol>
-
-        <div className={`activation__feedback activation__feedback--${uiState}`} role="status" aria-live="polite">
-          <p>{statusText}</p>
-          {formErrors.general && formErrors.general !== statusText && (
-            <p className="activation__feedback-detail">{formErrors.general}</p>
-          )}
+        <div className="activation__progress" aria-label={`Paso ${currentStep} de 3`}>
+          <div className="activation__progress-meta">
+            <span>Paso {currentStep} de 3</span>
+            <strong>{currentStep === 1 ? 'Validar datos' : currentStep === 2 ? 'Crear acceso' : 'Entrar'}</strong>
+          </div>
+          <div
+            className="activation__progress-track"
+            role="progressbar"
+            aria-valuemin={1}
+            aria-valuemax={3}
+            aria-valuenow={currentStep}
+            aria-valuetext={`Paso ${currentStep} de 3`}
+          >
+            <span className="activation__progress-fill" style={{ width: `${progressValue}%` }} />
+          </div>
         </div>
+
+        {shouldShowFeedback && (
+          <div className={`activation__feedback activation__feedback--${uiState}`} role="status" aria-live="polite">
+            {statusText ? <p>{statusText}</p> : null}
+            {formErrors.general && formErrors.general !== statusText && (
+              <p className="activation__feedback-detail">{formErrors.general}</p>
+            )}
+          </div>
+        )}
 
         {!activationState?.verified && (
           <form className="activation__form" onSubmit={handleValidateCardholder} noValidate>
             <div className="activation__field">
-              <label htmlFor="tarjetaNumero">Numero de tarjeta</label>
+              <label htmlFor="tarjetaNumero">Número de tarjeta</label>
               <input
                 id="tarjetaNumero"
                 type="text"
@@ -439,84 +432,72 @@ const Activation = () => {
               <p>
                 <strong>Tarjeta validada:</strong> {activationState.tarjetaNumero}
               </p>
-              <p>Ya puedes crear tu acceso con correo y contrasena.</p>
+              <p>Ya puedes crear tu acceso con correo y contraseña.</p>
             </div>
 
-            {!accessStepStarted && uiState === 'validated' && (
-              <button type="button" className="activation__submit" onClick={handleStartSignup}>
-                Crear mi acceso
+            <form className="activation__form" onSubmit={handleCompleteActivation} noValidate>
+              <div className="activation__field">
+                <label htmlFor="email">Correo</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={credentials.email}
+                  onChange={(event) => updateCredential('email', event.target.value)}
+                  placeholder="tu_correo@ejemplo.com"
+                  autoComplete="email"
+                  disabled={isBusy}
+                  required
+                />
+                {formErrors.email && <p className="activation__error">{formErrors.email}</p>}
+              </div>
+
+              <div className="activation__field">
+                <label htmlFor="password">Contraseña</label>
+                <input
+                  id="password"
+                  type="password"
+                  value={credentials.password}
+                  onChange={(event) => updateCredential('password', event.target.value)}
+                  placeholder="Crea una contraseña segura"
+                  autoComplete="new-password"
+                  disabled={isBusy}
+                  required
+                />
+                <p className="activation__hint">
+                  Usa entre {PASSWORD_MIN_LENGTH} y {PASSWORD_MAX_LENGTH} caracteres, con mayuscula, minuscula y numero.
+                </p>
+                {formErrors.password && <p className="activation__error">{formErrors.password}</p>}
+              </div>
+
+              <div className="activation__field">
+                <label htmlFor="confirmPassword">Confirmar contraseña</label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={credentials.confirmPassword}
+                  onChange={(event) => updateCredential('confirmPassword', event.target.value)}
+                  placeholder="Repite tu contraseña"
+                  autoComplete="new-password"
+                  disabled={isBusy}
+                  required
+                />
+                {formErrors.confirmPassword && (
+                  <p className="activation__error">{formErrors.confirmPassword}</p>
+                )}
+              </div>
+
+              <button type="submit" className="activation__submit" disabled={isBusy}>
+                {uiState === 'creating_account' ? 'Activando cuenta...' : 'Crear mi acceso'}
               </button>
-            )}
-
-            {accessStepStarted && (
-              <form className="activation__form" onSubmit={handleCompleteActivation} noValidate>
-                <div className="activation__field">
-                  <label htmlFor="email">Correo</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={credentials.email}
-                    onChange={(event) => updateCredential('email', event.target.value)}
-                    placeholder="tu_correo@ejemplo.com"
-                    autoComplete="email"
-                    disabled={isBusy}
-                    required
-                  />
-                  {formErrors.email && <p className="activation__error">{formErrors.email}</p>}
-                </div>
-
-                <div className="activation__field">
-                  <label htmlFor="password">Contrasena</label>
-                  <input
-                    id="password"
-                    type="password"
-                    value={credentials.password}
-                    onChange={(event) => updateCredential('password', event.target.value)}
-                    placeholder="Crea una contrasena segura"
-                    autoComplete="new-password"
-                    disabled={isBusy}
-                    required
-                  />
-                  <p className="activation__hint">
-                    Usa minimo 8 caracteres, con mayuscula, minuscula y numero.
-                  </p>
-                  {formErrors.password && <p className="activation__error">{formErrors.password}</p>}
-                </div>
-
-                <div className="activation__field">
-                  <label htmlFor="confirmPassword">Confirmar contrasena</label>
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    value={credentials.confirmPassword}
-                    onChange={(event) => updateCredential('confirmPassword', event.target.value)}
-                    placeholder="Repite tu contrasena"
-                    autoComplete="new-password"
-                    disabled={isBusy}
-                    required
-                  />
-                  {formErrors.confirmPassword && (
-                    <p className="activation__error">{formErrors.confirmPassword}</p>
-                  )}
-                </div>
-
-                <button type="submit" className="activation__submit" disabled={isBusy}>
-                  {uiState === 'creating_access'
-                    ? 'Creando acceso...'
-                    : uiState === 'linking_account'
-                    ? 'Vinculando cuenta...'
-                    : 'Crear mi acceso'}
-                </button>
-              </form>
-            )}
+            </form>
           </>
         )}
 
         <div className="activation__actions">
           <Link to="/login">Ir a login</Link>
-          <Link to="/migrar-cuenta">Ya tenia una cuenta local</Link>
+          <Link to="/forgot-password">Recuperar acceso</Link>
           {RECOVERABLE_STATES.includes(uiState) && (
-            <button type="button" className="activation__reset" onClick={() => void handleResetActivation()}>
+            <button type="button" className="activation__reset" onClick={handleResetActivation}>
               Reiniciar activacion
             </button>
           )}

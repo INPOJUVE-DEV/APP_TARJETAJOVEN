@@ -20,7 +20,6 @@ describe('authFlow', () => {
       tarjetaNumero: 'TJ-000123',
       verified: true,
     });
-
     expect(window.sessionStorage.getItem('tj.auth.pending-activation')).not.toContain('CURP');
   });
 

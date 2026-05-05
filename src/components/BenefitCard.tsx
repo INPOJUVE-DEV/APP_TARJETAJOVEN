@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Benefit } from '../features/catalog/catalogSlice';
+import { Benefit } from '../features/catalog/catalogTypes';
 
 interface BenefitCardProps {
   benefit: Benefit;
@@ -58,7 +58,7 @@ const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
           </div>
         </div>
         <div className="benefit-card__discount" aria-label={`Descuento: ${benefit.discount}`}>
-          <span>{benefit.discount}</span>
+          <span className="benefit-card__discount-text">{benefit.discount}</span>
         </div>
       </div>
       <div className="benefit-card__meta">

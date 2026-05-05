@@ -10,14 +10,14 @@ const Register = () => {
         <h1 id="register-info-title">El alta oficial ya no se realiza desde esta app</h1>
         <p className="login__hint">
           Si ya cuentas con una Tarjeta Joven fisica, usa la activacion con numero de tarjeta y CURP.
-          Si tu cuenta ya fue vinculada antes, inicia sesion con tu correo y contrasena.
+          Si tu cuenta ya fue vinculada antes, inicia sesión con tu correo y contraseña.
         </p>
         <div className="login__form">
           <Link to="/activar" className="login__submit">
             Activar con tarjeta
           </Link>
           <Link to="/login" className="login__secondary">
-            Iniciar sesion
+            Iniciar sesión
           </Link>
         </div>
       </section>

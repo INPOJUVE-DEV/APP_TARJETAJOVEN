@@ -18,7 +18,7 @@ const Hero = () => {
             Activar tarjeta
           </Link>
           <Link className="hero__cta hero__cta--outline" to="/login">
-            Iniciar sesion
+            Iniciar sesión
           </Link>
         </div>
       </div>

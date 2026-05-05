@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Benefit } from '../features/catalog/catalogSlice';
+import { Benefit } from '../features/catalog/catalogTypes';
 
 interface MerchantModalProps {
   open: boolean;

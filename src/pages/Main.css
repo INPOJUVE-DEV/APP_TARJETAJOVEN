@@ -71,6 +71,13 @@
   color: var(--color-neutral-700);
 }
 
+.main__inline-link {
+  color: var(--color-accent-500);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .main__card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);

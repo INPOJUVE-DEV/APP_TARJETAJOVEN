@@ -4,16 +4,12 @@ import './Main.css';
 
 const highlights = [
   {
-    title: 'Descuentos al instante',
-    description: 'Promos en cafes, bienestar y eventos aliados.',
+    title: 'Descuentos sin limites',
+    description: 'Promos en las cuatro regiones del estado y eventos aliados.',
   },
   {
-    title: 'Programa mas seguro',
-    description: 'Tu acceso se crea con correo y contrasena y se vincula directo con la API.',
-  },
-  {
-    title: 'Credencial lista para usar',
-    description: 'Activa tu tarjeta una vez y entra a tu perfil digital cuando lo necesites.',
+    title: 'App segura',
+    description: 'Mira y filtra nuestros mas de 200 convenios.',
   },
 ];
 
@@ -33,6 +29,17 @@ const Main = () => {
               <p>{item.description}</p>
             </article>
           ))}
+
+          <article className="main__card">
+            <h3>Credencial lista para usar</h3>
+            <p>
+              Si ya cuentas con tu tarjeta fisica, activa tu cuenta. Si aun no la tienes, mira{' '}
+              <Link to="/puntos-de-tramite" className="main__inline-link">
+                aqui
+              </Link>{' '}
+              nuestros puntos de tramite.
+            </p>
+          </article>
         </div>
         <div className="main__section-footer">
           <Link to="/help" className="main__link">

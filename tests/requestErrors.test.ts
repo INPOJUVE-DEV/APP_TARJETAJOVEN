@@ -3,11 +3,13 @@ import {
   getActivationErrorKind,
   getRequestErrorMessage,
   isAccountAlreadyLinkedError,
+  isSessionExpiredError,
 } from '../src/lib/requestErrors';
 
-const createApiError = (status: number, message: string) =>
+const createApiError = (status: number, message: string, payload?: Record<string, unknown>) =>
   Object.assign(new Error(message), {
     status,
+    payload: payload ?? { message },
   });
 
 describe('requestErrors', () => {
@@ -23,14 +25,15 @@ describe('requestErrors', () => {
 
   it('identifica cuentas ya vinculadas', () => {
     expect(isAccountAlreadyLinkedError(createApiError(409, 'Duplicado'))).toBe(true);
-    expect(isAccountAlreadyLinkedError(createApiError(500, 'Error'))).toBe(false);
+    expect(isAccountAlreadyLinkedError(createApiError(500, 'Error interno'))).toBe(false);
   });
 
-  it('mapea estados de bloqueo e invalidez para activacion', () => {
+  it('mapea estados de bloqueo, invalidez y expiracion de sesion', () => {
     expect(getActivationErrorKind(createApiError(403, 'Bloqueado'))).toBe('blocked');
     expect(getActivationErrorKind(createApiError(422, 'Invalido'))).toBe('invalid');
     expect(getRequestErrorMessage(createApiError(403, 'Bloqueado'))).toBe(
       'Esta tarjeta no esta activa. Acude a soporte.',
     );
+    expect(isSessionExpiredError(createApiError(401, 'Sesion vencida'))).toBe(true);
   });
 });
