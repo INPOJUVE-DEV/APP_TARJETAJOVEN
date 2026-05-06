@@ -263,9 +263,6 @@ const Catalog = () => {
           <h1 id="catalog-title" className="catalog-page__title">
             Cat&aacute;logo de beneficios
           </h1>
-          <p className="catalog-hero__summary">
-            Encuentra comercios aliados, revisa las condiciones y disfruta de los beneficios con tu tarjeta digital.
-          </p>
         </div>
         <div className="catalog-hero__meta" aria-live="polite">
           {activeFilterCount > 0 && (

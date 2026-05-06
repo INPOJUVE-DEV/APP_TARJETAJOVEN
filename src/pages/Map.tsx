@@ -34,20 +34,15 @@ const MapPage = () => {
             Mapa de beneficios
           </h1>
           <p className="page-header__summary">
-            Revisa comercios y ubicaciones relevantes del programa en una vista más directa,
-            pensada para entrar rápido y ubicarte sin distracciones.
+            Revisa comercios y ubicaciones relevantes del programa en una vista mas directa,
+            pensada para entrar rapido y ubicarte sin distracciones.
           </p>
         </header>
-
-        <div className="map-page__meta" aria-label="Indicadores del mapa">
-          <span className="pill-badge">Vista interactiva</span>
-          <span className="pill-badge">Cobertura estatal</span>
-        </div>
       </section>
 
       {isOffline ? (
         <div className="status-panel map-page__offline" role="status">
-          <p>Mapa no disponible sin conexión.</p>
+          <p>Mapa no disponible sin conexion.</p>
           <p>Vuelve a conectarte para consultar ubicaciones y beneficios cercanos.</p>
         </div>
       ) : (

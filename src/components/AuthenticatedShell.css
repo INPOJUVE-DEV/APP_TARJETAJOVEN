@@ -12,25 +12,32 @@
 }
 
 .app-shell__topbar-inner {
-  width: min(1200px, calc(100% - 32px));
+  width: min(1200px, calc(100% - 24px));
   margin: 0 auto;
-  padding: 16px 0;
+  padding: 8px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 14px;
+}
+
+.app-shell__topbar-start {
+  min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
 .app-shell__brand-link {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
 }
 
-.app-shell__brand .app-brand__image {
-  width: min(100%, 176px);
-}
-
-.app-shell__brand .app-brand__caption {
-  color: var(--color-primary-700);
+.app-shell__header-image {
+  width: auto;
+  height: 28px;
+  display: block;
+  object-fit: contain;
 }
 
 .app-shell__nav {
@@ -46,7 +53,7 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 999px;
   color: var(--color-neutral-600);
   font-weight: 700;
@@ -82,7 +89,7 @@
 }
 
 .app-shell__main {
-  padding: 28px 16px 120px;
+  padding: 20px 12px 110px;
 }
 
 .app-shell__content {
@@ -97,5 +104,21 @@
 
   .app-shell__main {
     padding: 32px 24px 72px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell__topbar-inner {
+    width: min(100%, calc(100% - 16px));
+    padding: 6px 0;
+    gap: 10px;
+  }
+
+  .app-shell__topbar-start {
+    gap: 0;
+  }
+
+  .app-shell__header-image {
+    height: 22px;
   }
 }

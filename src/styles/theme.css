@@ -130,9 +130,12 @@ html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  width: 100%;
+  max-width: 100%;
   font-family: var(--font-family-base);
   background-color: var(--color-neutral-100);
   color: var(--color-neutral-900);
+  overflow-x: clip;
 }
 
 html {
@@ -183,7 +186,7 @@ h6 {
 
 @media (max-width: 899px) {
   body {
-    padding-bottom: calc(clamp(88px, 18vw, 128px) + env(safe-area-inset-bottom));
+    padding-bottom: calc(clamp(78px, 17vw, 108px) + env(safe-area-inset-bottom));
   }
 }
 

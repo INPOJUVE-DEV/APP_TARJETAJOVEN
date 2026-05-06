@@ -1,4 +1,3 @@
-import institutionalLogo from '../../Recurso 3.png';
 import './AppBrand.css';
 
 type AppBrandProps = {
@@ -14,7 +13,7 @@ const AppBrand = ({ caption, className = '', compact = false }: AppBrandProps) =
 
   return (
     <div className={classes}>
-      <img src={institutionalLogo} alt="Logotipo institucional Tarjeta Joven" className="app-brand__image" />
+      <img src="/icons/logo.svg" alt="Logotipo Tarjeta Joven" className="app-brand__image" />
       {caption ? <span className="app-brand__caption">{caption}</span> : null}
     </div>
   );

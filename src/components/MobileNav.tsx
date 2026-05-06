@@ -1,12 +1,21 @@
+import { CSSProperties } from 'react';
 import { NavLink } from 'react-router-dom';
-import { appNavigationItems } from './AppNavigation';
+import { appNavigationItems, AppNavigationItem } from './AppNavigation';
 import './MobileNav.css';
 
-const MobileNav = () => {
+type MobileNavProps = {
+  items?: AppNavigationItem[];
+};
+
+const MobileNav = ({ items = appNavigationItems }: MobileNavProps) => {
+  const navStyle = {
+    ['--mobile-nav-count' as '--mobile-nav-count']: String(items.length),
+  } as CSSProperties;
+
   return (
     <nav className="mobile-nav" aria-label="Navegacion principal movil">
-      <ul className="mobile-nav__list">
-        {appNavigationItems.map((item) => (
+      <ul className="mobile-nav__list" style={navStyle}>
+        {items.map((item) => (
           <li key={item.to} className="mobile-nav__item">
             <NavLink
               to={item.to}
