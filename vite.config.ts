@@ -11,7 +11,8 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'icons/logo.svg'],
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'icons/logo.svg'],
       manifest: {
         name: 'Tarjeta Joven',
         short_name: 'Tarjeta Joven',
@@ -23,24 +24,17 @@ export default defineConfig({
           'Consulta beneficios, credenciales digitales y servicios para jóvenes desde cualquier dispositivo.',
         icons: [
           {
-            src: '/icons/logo.svg',
-            sizes: '192x192',
-            type: 'image/svg+xml',
-          },
-          {
-            src: '/icons/logo.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-          },
-          {
-            src: '/icons/logo.svg',
-            sizes: '1024x1024',
-            type: 'image/svg+xml',
-            purpose: 'maskable',
+            src: '/favicon.ico',
+            sizes: '256x256',
+            type: 'image/x-icon',
+            purpose: 'any',
           },
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
