@@ -1,0 +1,28 @@
+.app-brand {
+  display: inline-grid;
+  gap: 12px;
+  justify-items: start;
+}
+
+.app-brand__image {
+  width: min(100%, 320px);
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.app-brand__caption {
+  color: var(--color-neutral-600);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.app-brand--compact {
+  gap: 8px;
+}
+
+.app-brand--compact .app-brand__image {
+  width: min(100%, 220px);
+}

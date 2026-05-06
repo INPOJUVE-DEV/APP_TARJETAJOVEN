@@ -38,18 +38,18 @@ describe('Login flow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByLabelText('Correo'), {
+    fireEvent.change(screen.getByLabelText(/correo/i), {
       target: { value: 'ana@example.com' },
     });
-    fireEvent.change(screen.getByLabelText('Contraseña'), {
+    fireEvent.change(screen.getByLabelText(/contra/i), {
       target: { value: 'Segura123456' },
     });
 
-    fireEvent.submit(screen.getByLabelText('Correo').closest('form') as HTMLFormElement);
+    fireEvent.submit(screen.getByLabelText(/correo/i).closest('form') as HTMLFormElement);
 
     await waitFor(() => {
       expect(authMocks.login).toHaveBeenCalledWith('ana@example.com', 'Segura123456');
     });
-    expect(screen.getByText('Olvidé mi contraseña')).toBeTruthy();
+    expect(screen.getByRole('link', { name: /olvid/i })).toBeTruthy();
   });
 });

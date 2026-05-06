@@ -18,17 +18,17 @@ const categories: { id: HelpCategory | 'all'; label: string }[] = [
   { id: 'all', label: 'Todo' },
   { id: 'program', label: 'Programa' },
   { id: 'discounts', label: 'Descuentos' },
-  { id: 'support', label: 'Soporte tecnico' },
+  { id: 'support', label: 'Soporte técnico' },
 ];
 
 const faqs: FAQ[] = [
   {
     id: 'activation',
     category: 'program',
-    question: 'Quien puede activar la Tarjeta Joven desde la app?',
-    answer: 'Personas que ya tienen una tarjeta fisica y necesitan vincular su acceso digital.',
+    question: '¿Quién puede activar la Tarjeta Joven desde la app?',
+    answer: 'Personas que ya tienen una tarjeta física y necesitan vincular su acceso digital.',
     details: [
-      'La app valida numero de tarjeta y CURP.',
+      'La app valida número de tarjeta y CURP.',
       'Después creas tu acceso con correo y contraseña.',
     ],
     tags: ['activacion', 'curp', 'tarjeta'],
@@ -36,27 +36,27 @@ const faqs: FAQ[] = [
   {
     id: 'new-registration',
     category: 'program',
-    question: 'Puedo darme de alta por primera vez desde esta app?',
+    question: '¿Puedo darme de alta por primera vez desde esta app?',
     answer: 'No. El alta oficial ya no se realiza desde la app.',
     details: [
-      'Si aun no formas parte del programa, consulta los canales oficiales de Tarjeta Joven.',
-      'La app solo ofrece activacion de tarjeta y login para cuentas ya vinculadas.',
+      'Si aún no formas parte del programa, consulta los canales oficiales de Tarjeta Joven.',
+      'La app solo ofrece activación de tarjeta y login para cuentas ya vinculadas.',
     ],
     tags: ['registro', 'alta'],
   },
   {
     id: 'digital-card',
     category: 'program',
-    question: 'La tarjeta es digital o fisica?',
-    answer: 'Tu credencial digital se vincula a la tarjeta fisica y te sirve para mostrar beneficios.',
+    question: '¿La tarjeta es digital o física?',
+    answer: 'Tu credencial digital se vincula a la tarjeta física y te sirve para mostrar beneficios.',
     details: ['Una vez vinculada, puedes entrar a tu perfil y mostrar tu QR.'],
     tags: ['credencial', 'perfil'],
   },
   {
     id: 'discounts-how',
     category: 'discounts',
-    question: 'Como uso un descuento en un aliado?',
-    answer: 'Busca el comercio en el catalogo o en el mapa y presenta tu credencial digital al pagar.',
+    question: '¿Cómo uso un descuento en un aliado?',
+    answer: 'Busca el comercio en el catálogo o en el mapa y presenta tu credencial digital al pagar.',
     details: ['Algunos beneficios tienen restricciones de horario o sucursal.'],
     tags: ['beneficios', 'mapa', 'catalogo'],
   },
@@ -66,16 +66,16 @@ const faqs: FAQ[] = [
     question: 'Olvidé mi acceso. ¿Qué hago?',
     answer: 'Usa la opción de recuperación de contraseña desde la pantalla de login.',
     details: [
-      'Recibiras un enlace para restablecer tu acceso si el correo existe y esta habilitado.',
-      'Si aun no esta vinculada, primero activa tu tarjeta.',
+      'Recibirás un enlace para restablecer tu acceso si el correo existe y está habilitado.',
+      'Si tu tarjeta aún no está vinculada, primero activa tu cuenta.',
     ],
     tags: ['password', 'recuperacion', 'acceso'],
   },
   {
     id: 'support',
     category: 'support',
-    question: 'Necesito ayuda adicional, con quien hablo?',
-    answer: 'Usa los canales oficiales del programa o escribe desde la seccion de ayuda institucional.',
+    question: 'Necesito ayuda adicional, ¿con quién hablo?',
+    answer: 'Usa los canales oficiales del programa o escribe desde la sección de ayuda institucional.',
     links: [
       {
         label: 'Mesa de ayuda Tarjeta Joven',
@@ -189,23 +189,26 @@ const Help = () => {
 
   return (
     <main className="help-page" aria-labelledby="help-title">
-      <header className="help-page__header">
-        <h1 id="help-title">Centro de ayuda</h1>
-        <p className="help-page__intro">
-          Resuelve dudas sobre activación, beneficios y soporte técnico en minutos.
+      <header className="page-header">
+        <p className="page-header__eyebrow">Soporte institucional</p>
+        <h1 id="help-title" className="page-header__title">
+          Centro de ayuda
+        </h1>
+        <p className="page-header__summary">
+          Resuelve dudas sobre activación, beneficios y soporte técnico con una
+          experiencia más clara y consistente con el resto de la app.
         </p>
       </header>
 
       {isOffline && (
-        <div className="help-page__offline" role="status">
-          <span aria-hidden="true">!</span>
-          <p>Sin conexion. Mostramos la informacion guardada.</p>
+        <div className="status-panel help-page__offline" role="status">
+          <p>Sin conexión. Mostramos la información guardada.</p>
         </div>
       )}
 
-      <form className="help-page__search" onSubmit={handleSearchSubmit}>
+      <form className="help-page__search surface-card" onSubmit={handleSearchSubmit}>
         <label htmlFor="help-search" className="help-page__search-label">
-          Que necesitas saber?
+          ¿Qué necesitas saber?
         </label>
         <div className="help-page__search-bar">
           <input
@@ -213,17 +216,17 @@ const Help = () => {
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Escribe palabras clave como activacion o soporte."
+            placeholder="Escribe palabras clave como activación o soporte."
             aria-describedby="help-search-hint"
           />
-          <button type="submit" className="help-page__search-button">
+          <button type="submit" className="primary-button help-page__search-button">
             Buscar
           </button>
           <button
             type="button"
-            className="help-page__reset-button"
+            className="secondary-button help-page__reset-button"
             onClick={handleReset}
-            aria-label="Limpiar busqueda"
+            aria-label="Limpiar búsqueda"
             disabled={!hasActiveFilters}
           >
             Limpiar
@@ -248,11 +251,11 @@ const Help = () => {
         ))}
       </div>
 
-      <section className="help-page__results" aria-live="polite">
+      <section className="help-page__results surface-card" aria-live="polite">
         {filteredFaqs.length === 0 ? (
-          <p className="help-page__empty" role="status">
-            No encontramos coincidencias. Cambia las palabras o prueba otra categoria.
-          </p>
+          <div className="empty-state help-page__empty" role="status">
+            <p>No encontramos coincidencias. Cambia las palabras o prueba otra categoría.</p>
+          </div>
         ) : (
           <ul className="help-page__list" role="list">
             {filteredFaqs.map((faq) => (

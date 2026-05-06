@@ -26,24 +26,32 @@ const MapPage = () => {
   }, []);
 
   return (
-    <main className="map-page">
-      <section className="map-page__hero" aria-labelledby="map-title">
-        <div className="map-page__hero-copy">
-          <p className="map-page__eyebrow">Tarjeta Joven</p>
-          <h1 id="map-title" className="map-page__title">
+    <main className="map-page" aria-labelledby="map-title">
+      <section className="map-page__intro surface-card section-shell">
+        <header className="page-header">
+          <p className="page-header__eyebrow">Consulta territorial</p>
+          <h1 id="map-title" className="page-header__title">
             Mapa de beneficios
           </h1>
+          <p className="page-header__summary">
+            Revisa comercios y ubicaciones relevantes del programa en una vista más directa,
+            pensada para entrar rápido y ubicarte sin distracciones.
+          </p>
+        </header>
+
+        <div className="map-page__meta" aria-label="Indicadores del mapa">
+          <span className="pill-badge">Vista interactiva</span>
+          <span className="pill-badge">Cobertura estatal</span>
         </div>
-        <div className="map-page__hero-media" aria-hidden="true" />
       </section>
 
       {isOffline ? (
-        <div className="map-page__offline" role="status">
-          <span aria-hidden="true">Mapa</span>
-          <p>Mapa no disponible sin conexion</p>
+        <div className="status-panel map-page__offline" role="status">
+          <p>Mapa no disponible sin conexión.</p>
+          <p>Vuelve a conectarte para consultar ubicaciones y beneficios cercanos.</p>
         </div>
       ) : (
-        <section className="map-page__viewer" aria-label="Mapa interactivo">
+        <section className="map-page__viewer surface-card" aria-label="Mapa interactivo">
           {MAPS_URL ? (
             <iframe
               title="Mapa de comercios"
@@ -53,9 +61,9 @@ const MapPage = () => {
               allowFullScreen
             />
           ) : (
-            <p className="map-page__empty" role="status">
-              Configura la URL de Google MyMaps para visualizar el mapa.
-            </p>
+            <div className="empty-state map-page__empty" role="status">
+              <p>Configura la URL de Google MyMaps para visualizar el mapa.</p>
+            </div>
           )}
         </section>
       )}

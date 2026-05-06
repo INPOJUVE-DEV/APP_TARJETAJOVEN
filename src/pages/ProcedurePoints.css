@@ -1,49 +1,29 @@
 .procedure-points-page {
   width: min(100%, 1120px);
   margin: 0 auto;
-  padding: 24px 16px 96px;
+  padding: 8px 0 96px;
   display: grid;
-  gap: 24px;
+  gap: 20px;
+}
+
+.procedure-points-page__brand {
+  width: min(100%, 360px);
+  margin-left: 16px;
 }
 
 .procedure-points-hero {
-  display: grid;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-divider);
-}
-
-.procedure-points-hero__eyebrow {
-  margin: 0;
-  color: var(--color-accent-500);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.procedure-points-hero h1 {
-  margin: 0;
-  color: var(--color-heading);
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  line-height: 1.08;
-}
-
-.procedure-points-hero__summary {
-  margin: 0;
-  max-width: 720px;
-  color: var(--color-neutral-700);
-  line-height: 1.55;
+  gap: 0;
 }
 
 .procedure-points-regions {
   display: grid;
-  gap: 22px;
+  gap: 20px;
 }
 
 .procedure-region {
   display: grid;
   gap: 18px;
+  padding: 24px;
 }
 
 .procedure-region__header {
@@ -77,11 +57,11 @@
   padding: 20px;
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-secondary-500));
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-secondary-500));
 }
 
 .procedure-delegation--municipal {
-  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-primary-100));
+  background: color-mix(in srgb, var(--color-surface) 96%, var(--color-primary-100));
 }
 
 .procedure-delegation__header {
@@ -102,7 +82,7 @@
   margin: 0;
   color: var(--color-neutral-600);
   font-size: 0.92rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .procedure-delegation__offices {
@@ -128,7 +108,7 @@
 
 .procedure-point-card__eyebrow {
   margin: 0;
-  color: var(--color-primary-600);
+  color: var(--color-primary-700);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -173,23 +153,13 @@
   align-items: center;
 }
 
-.procedure-point-card__actions a,
-.procedure-point-card__actions span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-}
-
 .procedure-point-card__actions a {
-  padding: 0 14px;
-  background: var(--color-primary-500);
-  color: var(--color-button-on-primary);
+  min-width: 0;
 }
 
 .procedure-point-card__actions span {
   color: var(--color-neutral-600);
+  font-weight: 600;
 }
 
 .procedure-points-footer {
@@ -197,21 +167,19 @@
   justify-content: center;
 }
 
-.procedure-points-footer__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--color-divider);
-  border-radius: var(--radius-sm);
-  color: var(--color-primary-600);
-  font-weight: 700;
-  background: var(--color-surface);
-}
-
-@media (min-width: 640px) {
+@media (max-width: 640px) {
   .procedure-points-page {
-    padding: 32px 32px 96px;
+    padding-bottom: 80px;
+  }
+
+  .procedure-points-page__brand {
+    margin-left: 16px;
+    margin-right: 16px;
+    width: auto;
+  }
+
+  .procedure-points-hero,
+  .procedure-region {
+    border-radius: 0;
   }
 }

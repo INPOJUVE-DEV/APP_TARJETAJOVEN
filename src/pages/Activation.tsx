@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import AppBrand from '../components/AppBrand';
 import { clearPendingActivation, getPendingActivation, persistPendingActivation } from '../lib/authFlow';
 import { normalizeCurp, isValidCurp } from '../lib/curp';
 import {
@@ -32,6 +33,7 @@ type ActivationCredentials = {
   email: string;
   password: string;
   confirmPassword: string;
+  privacyNoticeAccepted: boolean;
 };
 
 type ActivationFormErrors = {
@@ -40,6 +42,7 @@ type ActivationFormErrors = {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  privacyNoticeAccepted?: string;
   general?: string;
 };
 
@@ -47,6 +50,7 @@ const INITIAL_CREDENTIALS: ActivationCredentials = {
   email: '',
   password: '',
   confirmPassword: '',
+  privacyNoticeAccepted: false,
 };
 
 const RECOVERABLE_STATES: ActivationUiState[] = [
@@ -57,6 +61,12 @@ const RECOVERABLE_STATES: ActivationUiState[] = [
   'error',
   'success',
 ];
+
+const normalizeComparableText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 
 const Activation = () => {
   const navigate = useNavigate();
@@ -125,19 +135,23 @@ const Activation = () => {
     if (!normalizedEmail) {
       nextErrors.email = 'Ingresa tu correo.';
     } else if (!isValidEmail(normalizedEmail)) {
-      nextErrors.email = 'Escribe un correo valido.';
+      nextErrors.email = 'Escribe un correo válido.';
     }
 
     if (!credentials.password) {
       nextErrors.password = 'Crea una contraseña.';
     } else if (!isSecurePassword(credentials.password)) {
-      nextErrors.password = `Usa entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres, con mayuscula, minuscula y numero.`;
+      nextErrors.password = `Usa entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres, con mayúscula, minúscula y número.`;
     }
 
     if (!credentials.confirmPassword) {
       nextErrors.confirmPassword = 'Confirma tu contraseña.';
     } else if (!passwordsMatch(credentials.password, credentials.confirmPassword)) {
       nextErrors.confirmPassword = 'Las contraseñas no coinciden.';
+    }
+
+    if (!credentials.privacyNoticeAccepted) {
+      nextErrors.privacyNoticeAccepted = 'Debes aceptar el Aviso de privacidad para continuar.';
     }
 
     return nextErrors;
@@ -176,7 +190,7 @@ const Activation = () => {
 
   const applyCredentialApiErrors = (error: unknown) => {
     const apiMessage = getRequestErrorMessage(error, {
-      fallbackMessage: 'No pudimos completar la activacion. Intenta de nuevo.',
+      fallbackMessage: 'No pudimos completar la activación. Intenta de nuevo.',
     });
     const normalizedMessage = apiMessage.toLowerCase();
 
@@ -281,7 +295,7 @@ const Activation = () => {
 
       const errorKind = getActivationErrorKind(error);
       applyActivationError(error, {
-        fallbackMessage: 'No pudimos completar la activacion. Intenta de nuevo.',
+        fallbackMessage: 'No pudimos completar la activación. Intenta de nuevo.',
         resetVerification: errorKind === 'blocked' || errorKind === 'invalid',
       });
     }
@@ -298,10 +312,10 @@ const Activation = () => {
     clearFormErrors();
   };
 
-  const updateCredential = (field: keyof ActivationCredentials, value: string) => {
+  const updateCredential = (field: keyof ActivationCredentials, value: string | boolean) => {
     setCredentials((current) => ({
       ...current,
-      [field]: field === 'email' ? value.toLowerCase() : value,
+      [field]: field === 'email' && typeof value === 'string' ? value.toLowerCase() : value,
     }));
     setFormErrors((current) => ({
       ...current,
@@ -319,15 +333,15 @@ const Activation = () => {
       case 'creating_account':
         return 'Estamos activando tu cuenta.';
       case 'success':
-        return 'Tu cuenta quedo activada correctamente.';
+        return 'Tu cuenta quedó activada correctamente.';
       case 'already_linked':
         return 'Esta tarjeta ya tiene una cuenta asociada. Inicia sesión o recupera tu acceso.';
       case 'blocked':
-        return 'Esta tarjeta no esta activa. Acude a soporte.';
+        return 'Esta tarjeta no está activa. Acude a soporte.';
       case 'invalid':
-        return 'Los datos no coinciden. Verifica tu numero de tarjeta y CURP.';
+        return 'Los datos no coinciden. Verifica tu número de tarjeta y CURP.';
       case 'error':
-        return 'No pudimos completar la activacion. Revisa el mensaje y vuelve a intentarlo.';
+        return 'No pudimos completar la activación. Revisa el mensaje y vuelve a intentarlo.';
       default:
         return '';
     }
@@ -335,15 +349,25 @@ const Activation = () => {
 
   const progressValue = (currentStep / 3) * 100;
   const shouldShowFeedback = uiState !== 'idle' || Boolean(formErrors.general);
+  const shouldShowFeedbackDetail =
+    Boolean(formErrors.general) &&
+    normalizeComparableText(formErrors.general ?? '') !== normalizeComparableText(statusText);
 
   return (
     <main className="activation" aria-labelledby="activation-title">
-      <section className="activation__card">
-        <p className="activation__step">Activacion guiada</p>
-        <h1 id="activation-title">Activa tu Tarjeta Joven</h1>
-        <p className="activation__description">
-          Sigue estos pasos para validar tu tarjeta, crear tu acceso y entrar a tu perfil digital.
-        </p>
+      <AppBrand className="activation__brand" caption="Activación institucional" />
+
+      <section className="activation__card surface-card" aria-labelledby="activation-title">
+        <div className="page-header">
+          <p className="page-header__eyebrow">Activación guiada</p>
+          <h1 id="activation-title" className="page-header__title">
+            Activa tu Tarjeta Joven
+          </h1>
+          <p className="page-header__summary">
+            Sigue estos pasos para validar tu tarjeta, crear tu acceso y entrar a tu
+            perfil digital.
+          </p>
+        </div>
 
         <div className="activation__progress" aria-label={`Paso ${currentStep} de 3`}>
           <div className="activation__progress-meta">
@@ -365,7 +389,7 @@ const Activation = () => {
         {shouldShowFeedback && (
           <div className={`activation__feedback activation__feedback--${uiState}`} role="status" aria-live="polite">
             {statusText ? <p>{statusText}</p> : null}
-            {formErrors.general && formErrors.general !== statusText && (
+            {shouldShowFeedbackDetail && (
               <p className="activation__feedback-detail">{formErrors.general}</p>
             )}
           </div>
@@ -416,11 +440,10 @@ const Activation = () => {
                 disabled={isBusy}
                 required
               />
-              <p className="activation__hint">La CURP solo se usa para validar tu tarjeta y no se almacena.</p>
               {formErrors.curp && <p className="activation__error">{formErrors.curp}</p>}
             </div>
 
-            <button type="submit" className="activation__submit" disabled={isBusy}>
+            <button type="submit" className="primary-button activation__submit" disabled={isBusy}>
               {uiState === 'validating' ? 'Validando...' : 'Validar datos'}
             </button>
           </form>
@@ -428,7 +451,7 @@ const Activation = () => {
 
         {activationState?.verified && (
           <>
-            <div className="activation__summary" aria-live="polite">
+            <div className="activation__summary">
               <p>
                 <strong>Tarjeta validada:</strong> {activationState.tarjetaNumero}
               </p>
@@ -464,7 +487,8 @@ const Activation = () => {
                   required
                 />
                 <p className="activation__hint">
-                  Usa entre {PASSWORD_MIN_LENGTH} y {PASSWORD_MAX_LENGTH} caracteres, con mayuscula, minuscula y numero.
+                  Usa entre {PASSWORD_MIN_LENGTH} y {PASSWORD_MAX_LENGTH} caracteres, con mayúscula,
+                  minúscula y número.
                 </p>
                 {formErrors.password && <p className="activation__error">{formErrors.password}</p>}
               </div>
@@ -486,7 +510,30 @@ const Activation = () => {
                 )}
               </div>
 
-              <button type="submit" className="activation__submit" disabled={isBusy}>
+              <div className="activation__field activation__field--checkbox">
+                <label htmlFor="privacyNoticeAccepted" className="activation__checkbox">
+                  <input
+                    id="privacyNoticeAccepted"
+                    type="checkbox"
+                    checked={credentials.privacyNoticeAccepted}
+                    onChange={(event) => updateCredential('privacyNoticeAccepted', event.target.checked)}
+                    disabled={isBusy}
+                    required
+                  />
+                  <span>
+                    He leído y acepto el{' '}
+                    <Link to="/aviso-de-privacidad" className="activation__inline-link">
+                      Aviso de privacidad
+                    </Link>
+                    .
+                  </span>
+                </label>
+                {formErrors.privacyNoticeAccepted && (
+                  <p className="activation__error">{formErrors.privacyNoticeAccepted}</p>
+                )}
+              </div>
+
+              <button type="submit" className="primary-button activation__submit" disabled={isBusy}>
                 {uiState === 'creating_account' ? 'Activando cuenta...' : 'Crear mi acceso'}
               </button>
             </form>
@@ -497,8 +544,8 @@ const Activation = () => {
           <Link to="/login">Ir a login</Link>
           <Link to="/forgot-password">Recuperar acceso</Link>
           {RECOVERABLE_STATES.includes(uiState) && (
-            <button type="button" className="activation__reset" onClick={handleResetActivation}>
-              Reiniciar activacion
+            <button type="button" className="secondary-button activation__reset" onClick={handleResetActivation}>
+              Reiniciar activación
             </button>
           )}
         </div>

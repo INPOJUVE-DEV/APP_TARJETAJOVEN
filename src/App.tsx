@@ -10,13 +10,13 @@ import Help from './pages/Help';
 import PreferencesInitializer from './features/preferences/PreferencesInitializer';
 import Onboarding from './features/onboarding/Onboarding';
 import A2HSBanner from './components/A2HSBanner';
-import MobileNav from './components/MobileNav';
 import { track } from './lib/analytics';
 import Activation from './pages/Activation';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProcedurePoints from './pages/ProcedurePoints';
+import PrivacyNotice from './pages/PrivacyNotice';
 
 const App = () => {
   useEffect(() => {
@@ -36,6 +36,7 @@ const App = () => {
         <Route path="/registro" element={<Navigate to="/activar" replace />} />
         <Route path="/activar" element={<Activation />} />
         <Route path="/activation" element={<Activation />} />
+        <Route path="/aviso-de-privacidad" element={<PrivacyNotice />} />
         <Route path="/puntos-de-tramite" element={<ProcedurePoints />} />
         <Route path="/migrar-cuenta" element={<Navigate to="/forgot-password" replace />} />
         <Route path="/registro/tarjeta-fisica" element={<Navigate to="/activar" replace />} />
@@ -81,7 +82,6 @@ const App = () => {
           }
         />
       </Routes>
-      <MobileNav />
     </>
   );
 };

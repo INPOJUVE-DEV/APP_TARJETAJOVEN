@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AppBrand from '../components/AppBrand';
 import { useAuth } from '../lib/useAuth';
 import { isValidEmail } from '../lib/validators';
 import './Login.css';
@@ -41,7 +42,7 @@ const Login = () => {
     if (!normalizedEmail) {
       nextErrors.email = 'Ingresa tu correo.';
     } else if (!isValidEmail(normalizedEmail)) {
-      nextErrors.email = 'Escribe un correo valido.';
+      nextErrors.email = 'Escribe un correo válido.';
     }
 
     if (!password) {
@@ -81,7 +82,9 @@ const Login = () => {
 
   return (
     <main className="login" aria-labelledby="login-title">
-      <section className="login__card" aria-labelledby="login-title">
+      <AppBrand className="login__brand login__brand--top" caption="Acceso digital seguro" />
+
+      <section className="login__card surface-card" aria-labelledby="login-title">
         <p className="login__eyebrow">Acceso digital</p>
         <h1 id="login-title">Inicia sesión</h1>
         <p className="login__hint">
@@ -108,7 +111,7 @@ const Login = () => {
           </div>
 
           <div className={`login__field${formErrors.password ? ' is-invalid' : ''}`}>
-              <label htmlFor="loginPassword">Contraseña</label>
+            <label htmlFor="loginPassword">Contraseña</label>
             <input
               id="loginPassword"
               type="password"
@@ -125,17 +128,17 @@ const Login = () => {
             {formErrors.password && <p className="login__error">{formErrors.password}</p>}
           </div>
 
-          <Link to="/forgot-password" className="login__secondary">
+          <Link to="/forgot-password" className="login__inline-link">
             Olvidé mi contraseña
           </Link>
 
-          <button type="submit" className="login__submit" disabled={!isAuthReady || isSubmitting || status === 'loading'}>
+          <button
+            type="submit"
+            className="primary-button login__submit"
+            disabled={!isAuthReady || isSubmitting || status === 'loading'}
+          >
             {isSubmitting || status === 'loading' ? 'Ingresando...' : 'Entrar'}
           </button>
-
-          <Link to="/activar" className="login__secondary">
-            Activar mi tarjeta
-          </Link>
 
           <p className="login__status" role="status" aria-live="polite">
             {statusMessage}
@@ -144,13 +147,9 @@ const Login = () => {
       </section>
 
       <footer className="login__footer">
-        <p>Aun no activas tu tarjeta?</p>
-        <Link to="/activar">Comenzar activacion</Link>
+        <p>¿Aún no activas tu tarjeta?</p>
+        <Link to="/activar">Comenzar activación</Link>
       </footer>
-
-      <div className="login__brand" aria-hidden="true">
-        <img src="/icons/logo.svg" alt="Tarjeta Joven" />
-      </div>
     </main>
   );
 };

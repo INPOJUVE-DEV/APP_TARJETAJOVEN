@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import AuthenticatedShell from './AuthenticatedShell';
 import { useAuth } from '../lib/useAuth';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -21,7 +22,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  return <>{children}</>;
+  return <AuthenticatedShell>{children}</AuthenticatedShell>;
 };
 
 export default ProtectedRoute;

@@ -42,7 +42,7 @@ describe('ProtectedRoute', () => {
     authState.status = 'loading';
     renderProtectedRoute();
 
-    expect(screen.getByText('Validando sesión')).toBeTruthy();
+    expect(screen.getByText(/Validando sesi/i)).toBeTruthy();
   });
 
   it('permite el acceso cuando la sesion esta autenticada', () => {

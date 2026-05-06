@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AppBrand from '../components/AppBrand';
 import { useAuth } from '../lib/useAuth';
 import {
   isSecurePassword,
@@ -25,13 +26,13 @@ const ResetPassword = () => {
     const nextErrors: { password?: string; passwordConfirmation?: string; general?: string } = {};
 
     if (!token) {
-      nextErrors.general = 'El enlace de recuperacion no es valido o ya expiro.';
+      nextErrors.general = 'El enlace de recuperación no es válido o ya expiró.';
     }
 
     if (!password) {
       nextErrors.password = 'Ingresa una contraseña nueva.';
     } else if (!isSecurePassword(password)) {
-      nextErrors.password = `Usa entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres, con mayuscula, minuscula y numero.`;
+      nextErrors.password = `Usa entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres, con mayúscula, minúscula y número.`;
     }
 
     if (!passwordConfirmation) {
@@ -67,12 +68,12 @@ const ResetPassword = () => {
 
   return (
     <main className="login" aria-labelledby="reset-password-title">
-      <section className="login__card">
+      <AppBrand className="login__brand login__brand--top" caption="Actualización segura" />
+
+      <section className="login__card surface-card">
         <p className="login__eyebrow">Nueva contraseña</p>
         <h1 id="reset-password-title">Restablece tu acceso</h1>
-        <p className="login__hint">
-          Crea una nueva contraseña para volver a entrar a tu cuenta.
-        </p>
+        <p className="login__hint">Crea una nueva contraseña para volver a entrar a tu cuenta.</p>
 
         <form className="login__form" onSubmit={handleSubmit} noValidate>
           <div className={`login__field${errors.password ? ' is-invalid' : ''}`}>
@@ -113,11 +114,11 @@ const ResetPassword = () => {
             {errors.passwordConfirmation && <p className="login__error">{errors.passwordConfirmation}</p>}
           </div>
 
-          <button type="submit" className="login__submit" disabled={isSubmitting}>
+          <button type="submit" className="primary-button login__submit" disabled={isSubmitting}>
             {isSubmitting ? 'Actualizando...' : 'Actualizar contraseña'}
           </button>
 
-          <Link to="/login" className="login__secondary">
+          <Link to="/login" className="secondary-button login__secondary">
             Volver a login
           </Link>
 

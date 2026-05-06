@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import AppBrand from '../components/AppBrand';
 import procedurePointsContent from '../../puntos de ramite.md?raw';
 import './ProcedurePoints.css';
 
@@ -59,7 +60,7 @@ const parseProcedureRegions = (content: string): ProcedureRegion[] => {
     }
   >();
   let currentRegion = 'General';
-  let currentDelegation = 'Sin delegacion';
+  let currentDelegation = 'Sin delegación';
 
   const blocks = content
     .split(/\r?\n\r?\n+/)
@@ -96,7 +97,7 @@ const parseProcedureRegions = (content: string): ProcedureRegion[] => {
       const heading = cleanHeading(firstLine);
       if (normalizeKey(heading).includes('region')) {
         currentRegion = heading;
-        currentDelegation = 'Sin delegacion';
+        currentDelegation = 'Sin delegación';
       } else {
         currentDelegation = heading;
         ensureGroup(currentRegion, currentDelegation);
@@ -138,7 +139,7 @@ const parseProcedureRegions = (content: string): ProcedureRegion[] => {
       return;
     }
 
-    ensureGroup(currentRegion, point.delegation || currentDelegation || 'Delegacion').push(point);
+    ensureGroup(currentRegion, point.delegation || currentDelegation || 'Delegación').push(point);
   });
 
   return Array.from(regions.entries()).map(([regionName, regionData]) => ({
@@ -156,19 +157,26 @@ const procedureRegions = parseProcedureRegions(procedurePointsContent);
 const ProcedurePoints = () => {
   return (
     <main className="procedure-points-page" aria-labelledby="procedure-points-title">
-      <section className="procedure-points-hero">
-        <p className="procedure-points-hero__eyebrow">Tarjeta Joven</p>
-        <h1 id="procedure-points-title">Puntos de tramite</h1>
-        <p className="procedure-points-hero__summary">
-          Consulta las sedes disponibles para tramitar tu tarjeta y revisa sus datos de contacto.
-        </p>
+      <AppBrand className="procedure-points-page__brand" caption="Trámite institucional" />
+
+      <section className="procedure-points-hero surface-card section-shell">
+        <div className="page-header">
+          <p className="page-header__eyebrow">Tarjeta Joven</p>
+          <h1 id="procedure-points-title" className="page-header__title">
+            Puntos de trámite
+          </h1>
+          <p className="page-header__summary">
+            Consulta las sedes disponibles para tramitar tu tarjeta y revisa sus datos
+            de atención antes de acudir.
+          </p>
+        </div>
       </section>
 
       <section className="procedure-points-regions" aria-label="Regiones y delegaciones">
         {procedureRegions.map((region) => (
-          <section key={region.name} className="procedure-region">
+          <section key={region.name} className="procedure-region surface-card">
             <header className="procedure-region__header">
-              <p className="procedure-region__eyebrow">Region</p>
+              <p className="procedure-region__eyebrow">Región</p>
               <h2>{region.name}</h2>
             </header>
 
@@ -176,7 +184,7 @@ const ProcedurePoints = () => {
               {region.delegations.map((delegation) => (
                 <section key={`${region.name}-${delegation.name}`} className="procedure-delegation">
                   <header className="procedure-delegation__header">
-                    <h3>{delegation.name || 'Delegacion'}</h3>
+                    <h3>{delegation.name || 'Delegación'}</h3>
                     <p>
                       {delegation.offices.length} {delegation.offices.length === 1 ? 'oficina' : 'oficinas'}
                     </p>
@@ -192,7 +200,7 @@ const ProcedurePoints = () => {
 
                         <dl className="procedure-point-card__details">
                           <div>
-                            <dt>Direccion</dt>
+                            <dt>Dirección</dt>
                             <dd>{formatValue(point.address)}</dd>
                           </div>
                           <div>
@@ -203,7 +211,7 @@ const ProcedurePoints = () => {
 
                         <div className="procedure-point-card__actions">
                           {point.mapsUrl ? (
-                            <a href={point.mapsUrl} target="_blank" rel="noreferrer">
+                            <a href={point.mapsUrl} target="_blank" rel="noreferrer" className="secondary-button">
                               Ver en Google Maps
                             </a>
                           ) : (
@@ -236,7 +244,7 @@ const ProcedurePoints = () => {
 
                         <dl className="procedure-point-card__details">
                           <div>
-                            <dt>Direccion</dt>
+                            <dt>Dirección</dt>
                             <dd>{formatValue(point.address)}</dd>
                           </div>
                           <div>
@@ -247,7 +255,7 @@ const ProcedurePoints = () => {
 
                         <div className="procedure-point-card__actions">
                           {point.mapsUrl ? (
-                            <a href={point.mapsUrl} target="_blank" rel="noreferrer">
+                            <a href={point.mapsUrl} target="_blank" rel="noreferrer" className="secondary-button">
                               Ver en Google Maps
                             </a>
                           ) : (
@@ -265,7 +273,7 @@ const ProcedurePoints = () => {
       </section>
 
       <div className="procedure-points-footer">
-        <Link to="/" className="procedure-points-footer__link">
+        <Link to="/" className="secondary-button procedure-points-footer__link">
           Volver al inicio
         </Link>
       </div>

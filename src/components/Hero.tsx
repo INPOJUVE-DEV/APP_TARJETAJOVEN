@@ -1,34 +1,38 @@
 import { Link } from 'react-router-dom';
+import AppBrand from './AppBrand';
 import './Hero.css';
+
+const heroSignals = ['Acceso seguro', 'Cobertura estatal', 'Beneficios vigentes'];
 
 const Hero = () => {
   return (
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero__content">
+        <AppBrand className="hero__brand" caption="Programa institucional" />
         <p className="hero__eyebrow">Tarjeta Joven</p>
         <h1 id="hero-title" className="hero__title">
-          Beneficios y oportunidades para las juventudes
+          Beneficios y acceso digital para las juventudes de San Luis Potosí
         </h1>
         <p className="hero__subtitle">
-          Activa tu tarjeta, vincula tu acceso seguro y usa tu credencial digital para entrar a
-          beneficios y actividades.
+          Si ya cuentas con tu Tarjeta Joven, activa tu acceso y consulta descuentos,
+          comercios aliados y novedades del programa desde una sola app.
         </p>
+
         <div className="hero__actions" role="group" aria-label="Acciones principales">
-          <Link className="hero__cta hero__cta--primary" to="/activar">
+          <Link className="primary-button hero__cta" to="/activar">
             Activar tarjeta
           </Link>
-          <Link className="hero__cta hero__cta--outline" to="/login">
+          <Link className="secondary-button hero__cta" to="/login">
             Iniciar sesión
           </Link>
         </div>
+
+        <ul className="hero__signals" aria-label="Atributos del programa">
+          {heroSignals.map((signal) => (
+            <li key={signal}>{signal}</li>
+          ))}
+        </ul>
       </div>
-      <figure className="hero__figure">
-        <img
-          src="/icons/logo.svg"
-          alt="Tarjeta Joven"
-          className="hero__image"
-        />
-      </figure>
     </section>
   );
 };
