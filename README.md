@@ -140,3 +140,9 @@ No habilites `VITE_ENABLE_SPEED_INSIGHTS` en Render; ese script solo debe cargar
 
 - Este repo incluye `netlify.toml` para reenviar `/api/v1/*` al backend y mantener el frontend en mismo origen.
 - Si usas Netlify, no habilites `VITE_ENABLE_SPEED_INSIGHTS`; ese script solo debe cargarse en Vercel.
+
+## Despliegue en Vercel
+
+- Este repo incluye `vercel.json` para reenviar `/api/v1/*` al backend de Railway y mantener el frontend en mismo origen.
+- La regla `/:path* -> /index.html` conserva el fallback de la SPA para rutas como `/login`, `/perfil` o `/catalog`.
+- Si ya existe un deploy roto en Vercel, necesitas redeploy para que estas reglas empiecen a aplicar.
