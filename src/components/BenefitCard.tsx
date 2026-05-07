@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import BenefitImage from './BenefitImage';
 import { Benefit } from '../features/catalog/catalogTypes';
 
+const FALLBACK_ICON_SRC = '/icons/inpojuve.png';
+
 interface BenefitCardProps {
   benefit: Benefit;
   onOpen: (benefit: Benefit) => void;
@@ -54,9 +56,13 @@ const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
           alt=""
           className="benefit-card__media-image"
           fallback={(
-            <div className="benefit-card__media-art">
-              <span>{benefit.category}</span>
-              <strong>{benefit.discount}</strong>
+            <div className="benefit-card__media-fallback">
+              <img
+                src={FALLBACK_ICON_SRC}
+                alt=""
+                className="benefit-card__media-fallback-image"
+                loading="lazy"
+              />
             </div>
           )}
         />
@@ -69,7 +75,14 @@ const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
               src={benefit.imageUrl}
               alt=""
               className="benefit-card__thumbnail-image"
-              fallback={<span>{initials}</span>}
+              fallback={(
+                <img
+                  src={FALLBACK_ICON_SRC}
+                  alt=""
+                  className="benefit-card__thumbnail-fallback-image"
+                  loading="lazy"
+                />
+              )}
             />
           </div>
           <div className="benefit-card__info">

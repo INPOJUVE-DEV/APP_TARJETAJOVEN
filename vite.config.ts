@@ -12,7 +12,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'icons/logo.svg'],
+      includeAssets: ['favicon.ico', 'icons/logo.svg', 'icons/inpojuve.png'],
       manifest: {
         name: 'Tarjeta Joven',
         short_name: 'Tarjeta Joven',
@@ -24,10 +24,16 @@ export default defineConfig({
           'Consulta beneficios, credenciales digitales y servicios para jóvenes desde cualquier dispositivo.',
         icons: [
           {
-            src: '/favicon.ico',
-            sizes: '256x256',
-            type: 'image/x-icon',
+            src: '/icons/inpojuve.png',
+            sizes: '824x820',
+            type: 'image/png',
             purpose: 'any',
+          },
+          {
+            src: '/icons/inpojuve.png',
+            sizes: '824x820',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },

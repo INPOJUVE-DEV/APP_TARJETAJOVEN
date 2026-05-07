@@ -8,10 +8,16 @@
   "description": "Consulta beneficios, credenciales digitales y servicios para jovenes desde cualquier dispositivo.",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "256x256",
-      "type": "image/x-icon",
+      "src": "/icons/inpojuve.png",
+      "sizes": "824x820",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icons/inpojuve.png",
+      "sizes": "824x820",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

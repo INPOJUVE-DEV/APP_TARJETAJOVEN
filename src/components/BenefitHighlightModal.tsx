@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import BenefitImage from './BenefitImage';
 import { BenefitHighlight } from '../features/catalog/catalogHighlights';
 
+const FALLBACK_ICON_SRC = '/icons/inpojuve.png';
+
 interface BenefitHighlightModalProps {
   open: boolean;
   highlight?: BenefitHighlight;
@@ -105,8 +107,16 @@ const BenefitHighlightModal = ({
                     className="benefit-highlight-modal__image"
                     fallback={(
                       <div className="benefit-highlight-modal__art">
-                        <span>{highlight.benefit.category}</span>
-                        <strong>{highlight.benefit.discount}</strong>
+                        <img
+                          src={FALLBACK_ICON_SRC}
+                          alt=""
+                          className="benefit-highlight-modal__art-image"
+                          loading="lazy"
+                        />
+                        <div className="benefit-highlight-modal__art-copy">
+                          <span>{highlight.benefit.category}</span>
+                          <strong>{highlight.benefit.discount}</strong>
+                        </div>
                       </div>
                     )}
                   />
