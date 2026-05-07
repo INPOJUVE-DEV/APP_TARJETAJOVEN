@@ -4,6 +4,7 @@ export interface Benefit {
   category: string;
   municipality: string;
   discount: string;
+  imageUrl?: string;
   address?: string;
   schedule?: string;
   description?: string;

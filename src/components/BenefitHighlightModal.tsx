@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import FocusTrap from 'focus-trap-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import BenefitImage from './BenefitImage';
 import { BenefitHighlight } from '../features/catalog/catalogHighlights';
 
 interface BenefitHighlightModalProps {
@@ -98,18 +99,17 @@ const BenefitHighlightModal = ({
 
               <section className="benefit-highlight-modal__body">
                 <div className="benefit-highlight-modal__hero" aria-hidden="true">
-                  {highlight.imageUrl ? (
-                    <img
-                      src={highlight.imageUrl}
-                      alt=""
-                      className="benefit-highlight-modal__image"
-                    />
-                  ) : (
-                    <div className="benefit-highlight-modal__art">
-                      <span>{highlight.benefit.category}</span>
-                      <strong>{highlight.benefit.discount}</strong>
-                    </div>
-                  )}
+                  <BenefitImage
+                    src={highlight.imageUrl}
+                    alt=""
+                    className="benefit-highlight-modal__image"
+                    fallback={(
+                      <div className="benefit-highlight-modal__art">
+                        <span>{highlight.benefit.category}</span>
+                        <strong>{highlight.benefit.discount}</strong>
+                      </div>
+                    )}
+                  />
                 </div>
 
                 <div className="benefit-highlight-modal__details">

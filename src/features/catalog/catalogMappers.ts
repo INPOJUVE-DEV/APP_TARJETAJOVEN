@@ -6,6 +6,7 @@ export interface CatalogItemDto {
   categoria: string;
   municipio: string;
   descuento: string;
+  imageUrl?: string | null;
   direccion?: string | null;
   horario?: string | null;
   descripcion?: string | null;
@@ -19,6 +20,7 @@ export const mapCatalogItemToBenefit = (item: CatalogItemDto): Benefit => ({
   category: item.categoria,
   municipality: item.municipio,
   discount: item.descuento,
+  imageUrl: item.imageUrl?.trim() || undefined,
   address: item.direccion ?? undefined,
   schedule: item.horario ?? undefined,
   description: item.descripcion ?? undefined,

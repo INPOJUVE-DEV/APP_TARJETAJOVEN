@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import BenefitImage from './BenefitImage';
 import { Benefit } from '../features/catalog/catalogTypes';
 
 interface BenefitCardProps {
@@ -47,10 +48,29 @@ const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
         }
       }}
     >
+      <div className="benefit-card__media" aria-hidden="true">
+        <BenefitImage
+          src={benefit.imageUrl}
+          alt=""
+          className="benefit-card__media-image"
+          fallback={(
+            <div className="benefit-card__media-art">
+              <span>{benefit.category}</span>
+              <strong>{benefit.discount}</strong>
+            </div>
+          )}
+        />
+      </div>
+
       <div className="benefit-card__header">
         <div className="benefit-card__brand">
           <div className="benefit-card__thumbnail" aria-hidden="true">
-            <span>{initials}</span>
+            <BenefitImage
+              src={benefit.imageUrl}
+              alt=""
+              className="benefit-card__thumbnail-image"
+              fallback={<span>{initials}</span>}
+            />
           </div>
           <div className="benefit-card__info">
             <h3 className="benefit-card__title">{benefit.name}</h3>
