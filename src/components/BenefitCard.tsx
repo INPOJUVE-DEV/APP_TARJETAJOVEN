@@ -16,17 +16,7 @@ const cardVariants = {
   selected: { opacity: 1, y: 0, scale: 1.01 },
 };
 
-const getInitials = (value: string) =>
-  value
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-
 const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
-  const initials = getInitials(benefit.name);
-
   return (
     <motion.article
       layout
@@ -50,24 +40,6 @@ const BenefitCard = ({ benefit, onOpen, isSelected }: BenefitCardProps) => {
         }
       }}
     >
-      <div className="benefit-card__media" aria-hidden="true">
-        <BenefitImage
-          src={benefit.imageUrl}
-          alt=""
-          className="benefit-card__media-image"
-          fallback={(
-            <div className="benefit-card__media-fallback">
-              <img
-                src={FALLBACK_ICON_SRC}
-                alt=""
-                className="benefit-card__media-fallback-image"
-                loading="lazy"
-              />
-            </div>
-          )}
-        />
-      </div>
-
       <div className="benefit-card__header">
         <div className="benefit-card__brand">
           <div className="benefit-card__thumbnail" aria-hidden="true">
