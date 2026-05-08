@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import InstitutionalHeader from '../components/InstitutionalHeader';
 import { useAuth } from '../lib/useAuth';
 import './Profile.css';
 
@@ -61,12 +62,13 @@ const Profile = () => {
 
   return (
     <main className="profile-page" aria-labelledby="profile-title">
-      <header className="page-header profile-page__header">
-        <p className="page-header__eyebrow">Mi Tarjeta Joven</p>
-        <h1 id="profile-title" className="page-header__title">
-          Hola, {displayName}
-        </h1>
-      </header>
+      <InstitutionalHeader
+        className="profile-page__header"
+        eyebrow="Mi Tarjeta Joven"
+        title={`Hola, ${displayName}`}
+        titleId="profile-title"
+        summary="Consulta tu credencial digital, verifica tus datos principales y manten acceso rapido a tus beneficios."
+      />
 
       <section className="profile-hero surface-card" aria-label="Resumen de tarjeta">
         <div className="profile-hero__copy">

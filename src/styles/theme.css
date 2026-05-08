@@ -214,6 +214,64 @@ h6 {
   gap: 24px;
 }
 
+.institutional-hero {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  justify-items: center;
+  padding: clamp(24px, 5vw, 40px);
+  border: 1px solid rgba(var(--color-primary-500-rgb), 0.12);
+  border-radius: calc(var(--radius-lg) + 4px);
+  background:
+    radial-gradient(circle at top, rgba(var(--color-primary-500-rgb), 0.14), transparent 34%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-surface) 92%, var(--color-secondary-500)),
+      var(--color-elevated)
+    );
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.institutional-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 18px 0;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--color-highlight), transparent);
+  opacity: 0.9;
+}
+
+.institutional-hero__icon {
+  display: block;
+  width: min(100%, 280px);
+  max-height: 230px;
+  margin: 0 auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+.institutional-hero__body {
+  width: 100%;
+  display: grid;
+  gap: 18px;
+}
+
+.institutional-hero__header {
+  justify-items: center;
+  text-align: center;
+}
+
+.institutional-hero__header .page-header__summary {
+  max-width: 62ch;
+}
+
+.institutional-hero__aside {
+  display: flex;
+  justify-content: center;
+}
+
 .page-header {
   display: grid;
   gap: 10px;
@@ -370,8 +428,8 @@ h6 {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: flex-end;
-  align-self: flex-end;
+  justify-content: center;
+  align-self: center;
 }
 
 .catalog-hero__meta span {
@@ -1325,6 +1383,15 @@ h6 {
     padding: 32px 32px 80px;
   }
 
+  .institutional-hero__icon {
+    width: min(100%, 320px);
+    max-height: 250px;
+  }
+
+  .institutional-hero__body {
+    gap: 20px;
+  }
+
   .catalog-hero {
     flex-direction: row;
     justify-content: space-between;
@@ -1332,8 +1399,7 @@ h6 {
   }
 
   .catalog-hero__meta {
-    justify-content: flex-end;
-    max-width: 320px;
+    max-width: 420px;
   }
 
   .catalog-filters__reset {

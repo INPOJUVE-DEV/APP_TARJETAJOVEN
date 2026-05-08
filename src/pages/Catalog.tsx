@@ -3,6 +3,7 @@ import { AnimatePresence, LayoutGroup } from 'framer-motion';
 import BenefitCard from '../components/BenefitCard';
 import BenefitHighlightModal from '../components/BenefitHighlightModal';
 import FilterChips from '../components/FilterChips';
+import InstitutionalHeader from '../components/InstitutionalHeader';
 import MerchantModal from '../components/MerchantModal';
 import {
   useLazyGetCatalogHighlightsQuery,
@@ -257,24 +258,24 @@ const Catalog = () => {
 
   return (
     <main className="catalog-page">
-      <section className="catalog-hero" aria-labelledby="catalog-title">
-        <div className="catalog-hero__copy">
-          <p className="catalog-hero__eyebrow">Convenios activos</p>
-          <h1 id="catalog-title" className="catalog-page__title">
-            Cat&aacute;logo de beneficios
-          </h1>
-        </div>
-        <div className="catalog-hero__meta" aria-live="polite">
-          {activeFilterCount > 0 && (
+      <InstitutionalHeader
+        eyebrow="Convenios activos"
+        title="Catalogo de beneficios"
+        titleId="catalog-title"
+        summary="Explora convenios vigentes, revisa descuentos y encuentra opciones cercanas con una vista mas clara y consistente."
+        aside={(
+          <div className="catalog-hero__meta" aria-live="polite">
+            {activeFilterCount > 0 && (
+              <span>
+                {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+              </span>
+            )}
             <span>
-              {activeFilterCount} {activeFilterCount === 1 ? 'filtro activo' : 'filtros activos'}
+              {totalBenefits} {totalBenefits === 1 ? 'beneficio' : 'beneficios'}
             </span>
-          )}
-          <span>
-            {totalBenefits} {totalBenefits === 1 ? 'beneficio' : 'beneficios'}
-          </span>
-        </div>
-      </section>
+          </div>
+        )}
+      />
 
       <FilterChips
         categories={categories}

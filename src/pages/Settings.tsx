@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import InstitutionalHeader from '../components/InstitutionalHeader';
 import { setTheme, Theme } from '../features/preferences/preferencesSlice';
 import { useAuth } from '../lib/useAuth';
 import { isValidEmail } from '../lib/validators';
@@ -76,21 +77,17 @@ const Settings = () => {
 
   return (
     <main className="settings-page" aria-labelledby="settings-title">
-      <header className="page-header">
-        <p className="page-header__eyebrow">Preferencias</p>
-        <h1 id="settings-title" className="page-header__title">
-          Configuración
-        </h1>
-        <p className="page-header__summary">
-          Ajusta tu experiencia visual sin salir de la aplicación y mantén una lectura
-          cómoda en cualquier contexto.
-        </p>
-      </header>
+      <InstitutionalHeader
+        eyebrow="Preferencias"
+        title="Configuracion"
+        titleId="settings-title"
+        summary="Ajusta tu experiencia visual sin salir de la aplicacion y manten una lectura comoda en cualquier contexto."
+      />
 
       <section className="settings-section surface-card section-shell" aria-labelledby="preferences-title">
         <div className="settings-section__header">
           <h2 id="preferences-title">Tema</h2>
-          <p>Selecciona la presentación que mejor se adapte a tu entorno de uso.</p>
+          <p>Selecciona la presentacion que mejor se adapte a tu entorno de uso.</p>
         </div>
 
         <div className="settings-theme-grid" role="radiogroup" aria-label="Tema">

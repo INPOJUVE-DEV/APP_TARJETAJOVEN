@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import InstitutionalHeader from '../components/InstitutionalHeader';
 import { env } from '../config/env';
 import { track } from '../lib/analytics';
 import './Map.css';
@@ -27,18 +28,13 @@ const MapPage = () => {
 
   return (
     <main className="map-page" aria-labelledby="map-title">
-      <section className="map-page__intro surface-card section-shell">
-        <header className="page-header">
-          <p className="page-header__eyebrow">Consulta territorial</p>
-          <h1 id="map-title" className="page-header__title">
-            Mapa de beneficios
-          </h1>
-          <p className="page-header__summary">
-            Revisa comercios y ubicaciones relevantes del programa en una vista mas directa,
-            pensada para entrar rapido y ubicarte sin distracciones.
-          </p>
-        </header>
-      </section>
+      <InstitutionalHeader
+        className="map-page__intro"
+        eyebrow="Consulta territorial"
+        title="Mapa de beneficios"
+        titleId="map-title"
+        summary="Revisa comercios y ubicaciones relevantes del programa en una vista mas directa, pensada para entrar rapido y ubicarte sin distracciones."
+      />
 
       {isOffline ? (
         <div className="status-panel map-page__offline" role="status">
