@@ -2,13 +2,11 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import InstitutionalHeader from '../components/InstitutionalHeader';
 import { getAuthSession } from '../lib/authSession';
-import { getAgeFromCurp } from '../lib/curp';
 import { useAuth } from '../lib/useAuth';
 import './Profile.css';
 
 const DEFAULT_PROFILE = {
   name: 'Juventud potosina',
-  age: 22,
   cardNumber: 'TJ-894512-2025',
   municipality: 'San Luis Potosi',
 };
@@ -113,25 +111,6 @@ const resolveDisplayName = (profile: unknown) => {
   return getSessionShortName() ?? DEFAULT_PROFILE.name;
 };
 
-const resolveProfileCurp = (profile: unknown) => {
-  const profileRecord = asRecord(profile);
-  const titular = asRecord(profileRecord?.titular);
-  const cardholder = asRecord(profileRecord?.cardholder);
-  const beneficiary = asRecord(profileRecord?.beneficiario);
-
-  return pickString(
-    titular?.curp,
-    cardholder?.curp,
-    beneficiary?.curp,
-    profileRecord?.titularCurp,
-    profileRecord?.curpTitular,
-    profileRecord?.titular_curp,
-    profileRecord?.cardholderCurp,
-    profileRecord?.beneficiarioCurp,
-    profileRecord?.curp,
-  );
-};
-
 const Profile = () => {
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
@@ -150,12 +129,7 @@ const Profile = () => {
       return profile.edad;
     }
 
-    const ageFromCurp = getAgeFromCurp(resolveProfileCurp(profile));
-    if (ageFromCurp !== null) {
-      return ageFromCurp;
-    }
-
-    return DEFAULT_PROFILE.age;
+    return null;
   }, [profile]);
 
   const displayCardNumber = useMemo(
@@ -163,10 +137,7 @@ const Profile = () => {
     [profile?.tarjetaNumero],
   );
 
-  const displayMunicipality = useMemo(
-    () => profile?.municipio ?? DEFAULT_PROFILE.municipality,
-    [profile?.municipio],
-  );
+  const displayMunicipality = DEFAULT_PROFILE.municipality;
 
   const normalizedStatus = typeof profile?.status === 'string' ? profile.status.trim().toLowerCase() : 'active';
   const showStatusBadge = normalizedStatus !== 'active';
@@ -219,10 +190,12 @@ const Profile = () => {
             <dt>Municipio</dt>
             <dd>{displayMunicipality}</dd>
           </div>
-          <div className="profile-hero__detail">
-            <dt>Edad</dt>
-            <dd>{displayAge} anos</dd>
-          </div>
+          {displayAge !== null ? (
+            <div className="profile-hero__detail">
+              <dt>Edad</dt>
+              <dd>{displayAge} anos</dd>
+            </div>
+          ) : null}
         </dl>
       </section>
 
