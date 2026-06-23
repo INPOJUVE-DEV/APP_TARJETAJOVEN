@@ -19,8 +19,10 @@ vi.mock('react-router-dom', async () => {
 vi.mock('../src/lib/useAuth', () => ({
   useAuth: () => ({
     profile: {
-      nombre: 'Ana',
-      apellidos: 'Lopez',
+      nombre: 'Beneficiario',
+      apellidos: 'Lopez Perez',
+      titularNombre: 'Ana Maria',
+      titularPrimerApellido: 'Sanchez',
       edad: 22,
       barcodeValue: 'TJ-0001',
     },
@@ -29,7 +31,7 @@ vi.mock('../src/lib/useAuth', () => ({
 }));
 
 describe('Logout flow', () => {
-  it('limpia la sesion local y vuelve al login', async () => {
+  it('muestra el nombre del titular y vuelve al login al cerrar sesion', async () => {
     authMocks.logout.mockResolvedValue(undefined);
 
     render(
@@ -38,7 +40,10 @@ describe('Logout flow', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    expect(screen.getByRole('heading', { name: 'Hola, Ana Sanchez' })).toBeTruthy();
+    expect(screen.getByText('Ana Sanchez')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesion' }));
 
     await waitFor(() => {
       expect(authMocks.logout).toHaveBeenCalled();

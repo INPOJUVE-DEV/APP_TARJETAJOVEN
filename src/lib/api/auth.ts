@@ -31,6 +31,14 @@ export interface UserProfile {
   id: number | string;
   nombre: string;
   apellidos: string;
+  titular?: {
+    nombre?: string | null;
+    primerApellido?: string | null;
+  } | null;
+  titularNombre?: string | null;
+  titularPrimerApellido?: string | null;
+  nombreTitular?: string | null;
+  primerApellidoTitular?: string | null;
   role: string;
   status: string;
   edad?: number | null;

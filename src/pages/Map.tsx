@@ -33,7 +33,7 @@ const MapPage = () => {
         eyebrow="Consulta territorial"
         title="Mapa de beneficios"
         titleId="map-title"
-        summary="Revisa comercios y ubicaciones relevantes del programa en una vista mas directa, pensada para entrar rapido y ubicarte sin distracciones."
+        summary=""
       />
 
       {isOffline ? (

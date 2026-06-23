@@ -11,9 +11,11 @@ const DEFAULT_PROFILE = {
   municipality: 'San Luis Potosi',
 };
 
+const getPrimaryLastName = (apellido?: string | null) => apellido?.trim().split(/\s+/).filter(Boolean)[0] ?? '';
+
 const buildShortName = (nombre?: string | null, apellidos?: string | null) => {
   const firstName = nombre?.trim().split(/\s+/).filter(Boolean)[0] ?? '';
-  const firstLastName = apellidos?.trim().split(/\s+/).filter(Boolean)[0] ?? '';
+  const firstLastName = getPrimaryLastName(apellidos);
   const shortName = [firstName, firstLastName].filter(Boolean).join(' ').trim();
 
   return shortName || DEFAULT_PROFILE.name;
@@ -25,8 +27,23 @@ const Profile = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const displayName = useMemo(
-    () => buildShortName(profile?.nombre, profile?.apellidos),
-    [profile?.apellidos, profile?.nombre],
+    () =>
+      buildShortName(
+        profile?.titular?.nombre ?? profile?.titularNombre ?? profile?.nombreTitular ?? profile?.nombre,
+        profile?.titular?.primerApellido ??
+          profile?.titularPrimerApellido ??
+          profile?.primerApellidoTitular ??
+          getPrimaryLastName(profile?.apellidos),
+      ),
+    [
+      profile?.apellidos,
+      profile?.nombre,
+      profile?.nombreTitular,
+      profile?.primerApellidoTitular,
+      profile?.titular,
+      profile?.titularNombre,
+      profile?.titularPrimerApellido,
+    ],
   );
 
   const displayAge = useMemo(() => {
@@ -67,7 +84,7 @@ const Profile = () => {
         eyebrow="Mi Tarjeta Joven"
         title={`Hola, ${displayName}`}
         titleId="profile-title"
-        summary="Consulta tu credencial digital, verifica tus datos principales y manten acceso rapido a tus beneficios."
+        summary=""
       />
 
       <section className="profile-hero surface-card" aria-label="Resumen de tarjeta">
