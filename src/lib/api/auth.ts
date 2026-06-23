@@ -31,6 +31,7 @@ export interface UserProfile {
   id: number | string;
   nombre: string;
   apellidos: string;
+  nombreCompleto?: string | null;
   titular?: {
     nombre?: string | null;
     primerApellido?: string | null;
