@@ -43,6 +43,7 @@ export interface UserProfile {
   role: string;
   status: string;
   edad?: number | null;
+  curp?: string | null;
   creditos?: number | null;
   barcodeValue?: string | null;
   email?: string | null;

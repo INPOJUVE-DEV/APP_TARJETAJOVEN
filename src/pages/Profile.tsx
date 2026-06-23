@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import InstitutionalHeader from '../components/InstitutionalHeader';
 import { getAuthSession } from '../lib/authSession';
+import { getAgeFromCurp } from '../lib/curp';
 import { useAuth } from '../lib/useAuth';
 import './Profile.css';
 
@@ -112,6 +113,25 @@ const resolveDisplayName = (profile: unknown) => {
   return getSessionShortName() ?? DEFAULT_PROFILE.name;
 };
 
+const resolveProfileCurp = (profile: unknown) => {
+  const profileRecord = asRecord(profile);
+  const titular = asRecord(profileRecord?.titular);
+  const cardholder = asRecord(profileRecord?.cardholder);
+  const beneficiary = asRecord(profileRecord?.beneficiario);
+
+  return pickString(
+    titular?.curp,
+    cardholder?.curp,
+    beneficiary?.curp,
+    profileRecord?.titularCurp,
+    profileRecord?.curpTitular,
+    profileRecord?.titular_curp,
+    profileRecord?.cardholderCurp,
+    profileRecord?.beneficiarioCurp,
+    profileRecord?.curp,
+  );
+};
+
 const Profile = () => {
   const { profile, logout } = useAuth();
   const navigate = useNavigate();
@@ -129,8 +149,14 @@ const Profile = () => {
     if (typeof profile?.edad === 'number' && !Number.isNaN(profile.edad)) {
       return profile.edad;
     }
+
+    const ageFromCurp = getAgeFromCurp(resolveProfileCurp(profile));
+    if (ageFromCurp !== null) {
+      return ageFromCurp;
+    }
+
     return DEFAULT_PROFILE.age;
-  }, [profile?.edad]);
+  }, [profile]);
 
   const displayCardNumber = useMemo(
     () => profile?.tarjetaNumero ?? DEFAULT_PROFILE.cardNumber,

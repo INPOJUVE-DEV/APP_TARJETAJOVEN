@@ -4,6 +4,15 @@
   justify-items: start;
 }
 
+.app-brand__image-stack {
+  display: grid;
+  place-items: center;
+}
+
+.app-brand__image-stack > * {
+  grid-area: 1 / 1;
+}
+
 .app-brand__image {
   width: min(100%, 320px);
   height: auto;

@@ -46,6 +46,8 @@ vi.mock('../src/lib/authSession', () => ({
 
 describe('Logout flow', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-06-23T12:00:00Z'));
     cleanup();
     authMocks.logout.mockReset();
     navigateMock.mockReset();
@@ -66,6 +68,7 @@ describe('Logout flow', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it('muestra el nombre del titular y vuelve al login al cerrar sesion', async () => {
@@ -140,5 +143,20 @@ describe('Logout flow', () => {
 
     expect(screen.getByRole('heading', { name: 'Hola, Mariana Torres' })).toBeTruthy();
     expect(screen.getByText('Mariana Torres')).toBeTruthy();
+  });
+
+  it('calcula la edad desde la fecha de nacimiento del CURP cuando edad no viene del backend', () => {
+    profileState.value = {
+      nombreCompleto: 'JUAN PEREZ',
+      curp: 'PEGA080623HSLRRNA1',
+    };
+
+    render(
+      <MemoryRouter>
+        <Profile />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText('18 anos')).toBeTruthy();
   });
 });

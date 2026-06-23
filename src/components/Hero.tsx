@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import AppBrand from './AppBrand';
 import './Hero.css';
 
-const heroSignals = ['Acceso seguro', 'Cobertura estatal', 'Beneficios vigentes'];
 
 const Hero = () => {
   return (
@@ -26,12 +25,6 @@ const Hero = () => {
             Iniciar sesión
           </Link>
         </div>
-
-        <ul className="hero__signals" aria-label="Atributos del programa">
-          {heroSignals.map((signal) => (
-            <li key={signal}>{signal}</li>
-          ))}
-        </ul>
       </div>
     </section>
   );

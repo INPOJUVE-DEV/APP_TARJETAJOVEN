@@ -13,7 +13,10 @@ const AppBrand = ({ caption, className = '', compact = false }: AppBrandProps) =
 
   return (
     <div className={classes}>
-      <img src="/icons/logo.svg" alt="Logotipo Tarjeta Joven" className="app-brand__image" />
+      <div className="app-brand__image-stack" aria-hidden="true">
+        <img src="/icons/inpojuve.png" alt="" className="app-brand__image theme-brand-asset--light" />
+        <img src="/icons/logo.svg" alt="" className="app-brand__image theme-brand-asset--dark" />
+      </div>
       {caption ? <span className="app-brand__caption">{caption}</span> : null}
     </div>
   );

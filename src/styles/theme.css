@@ -252,6 +252,27 @@ h6 {
   object-position: center;
 }
 
+.institutional-hero__icon-stack {
+  display: grid;
+  place-items: center;
+}
+
+.institutional-hero__icon-stack > * {
+  grid-area: 1 / 1;
+}
+
+.theme-brand-asset--dark {
+  display: none;
+}
+
+[data-theme='dark'] .theme-brand-asset--light {
+  display: none;
+}
+
+[data-theme='dark'] .theme-brand-asset--dark {
+  display: block;
+}
+
 .institutional-hero__body {
   width: 100%;
   display: grid;

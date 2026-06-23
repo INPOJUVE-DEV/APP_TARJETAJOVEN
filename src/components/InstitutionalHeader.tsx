@@ -21,11 +21,18 @@ const InstitutionalHeader = ({
 
   return (
     <section className={classes} aria-labelledby={titleId}>
-      <img
-        src="/icons/inpojuve.png"
-        alt="Identidad institucional de INPOJUVE"
-        className="institutional-hero__icon"
-      />
+      <div className="institutional-hero__icon-stack" aria-hidden="true">
+        <img
+          src="/icons/inpojuve.png"
+          alt=""
+          className="institutional-hero__icon theme-brand-asset--light"
+        />
+        <img
+          src="/icons/logo.svg"
+          alt=""
+          className="institutional-hero__icon theme-brand-asset--dark"
+        />
+      </div>
 
       <div className="institutional-hero__body">
         <header className="page-header institutional-hero__header">

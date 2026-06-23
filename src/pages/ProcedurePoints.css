@@ -8,7 +8,13 @@
 
 .procedure-points-page__brand {
   width: min(100%, 360px);
-  margin-left: 16px;
+  margin: 0 auto;
+  justify-items: center;
+  text-align: center;
+}
+
+.procedure-points-page__brand .app-brand__caption {
+  display: none;
 }
 
 .procedure-points-hero {
@@ -173,8 +179,8 @@
   }
 
   .procedure-points-page__brand {
-    margin-left: 16px;
-    margin-right: 16px;
+    margin-left: auto;
+    margin-right: auto;
     width: auto;
   }
 
